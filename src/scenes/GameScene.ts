@@ -9,9 +9,11 @@ import { combatSystem } from '../systems/CombatSystem';
 import { heatBarSystem } from '../systems/HeatBarSystem';
 import { difficultySystem } from '../systems/DifficultySystem';
 import { scoreSystem } from '../systems/ScoreSystem';
+import { xpSystem } from '../systems/XPSystem';
 import { collisionSystem } from '../systems/CollisionSystem';
 import { createHUD, type HUD } from '../ui/HUD';
 import { showGameOver, type GameOverScreen } from '../ui/GameOverScreen';
+import { showLevelUp, type LevelUpScreen } from '../ui/LevelUpScreen';
 import { GameConfig } from '../config';
 
 interface EnemyRender {
@@ -31,6 +33,8 @@ export class GameScene extends Phaser.Scene {
   private projectiles: ProjectileRender[] = [];
   private hud!: HUD;
   private gameOverScreen: GameOverScreen | null = null;
+  private levelUpScreen: LevelUpScreen | null = null;
+  private keyHandler?: (event: KeyboardEvent) => void;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -46,6 +50,7 @@ export class GameScene extends Phaser.Scene {
     this.enemyRenderMap = new Map();
     this.projectiles = [];
     this.gameOverScreen = null;
+    this.levelUpScreen = null;
 
     // Player rectangle
     const p = this.gameState.player;
@@ -57,18 +62,24 @@ export class GameScene extends Phaser.Scene {
     // HUD
     this.hud = createHUD(this);
 
-    // Keyboard input
-    this.input.keyboard!.on('keydown', (event: KeyboardEvent) => {
+    // Keyboard input — remove old listener before re-adding (prevents leaks on restart)
+    if (this.keyHandler) {
+      this.input.keyboard!.off('keydown', this.keyHandler);
+    }
+    this.keyHandler = (event: KeyboardEvent) => {
       if (this.gameState.gameOver) {
         if (event.key === 'r' || event.key === 'R') {
           this.restartGame();
         }
         return;
       }
+      // Don't capture letters while paused (level-up screen handles 1/2/3)
+      if (this.gameState.isPaused) return;
       if (event.key.length === 1 && /^[A-Za-z]$/.test(event.key)) {
         this.gameState.pendingKeys.push(event.key.toUpperCase());
       }
-    });
+    };
+    this.input.keyboard!.on('keydown', this.keyHandler);
   }
 
   update(_time: number, delta: number): void {
@@ -76,21 +87,60 @@ export class GameScene extends Phaser.Scene {
 
     const gs = this.gameState;
 
+    // If paused (level-up screen), skip all game systems but still render
+    if (gs.isPaused) {
+      // Show level-up screen if not already shown and choices exist
+      if (!this.levelUpScreen && gs.levelUpChoices.length > 0) {
+        this.levelUpScreen = showLevelUp(this, gs.levelUpChoices, (powerUpId: string) => {
+          gs.activePowerUps.push(powerUpId);
+          gs.levelUpChoices = [];
+          gs.isPaused = false;
+          if (this.levelUpScreen) {
+            this.levelUpScreen.destroy();
+          }
+          this.levelUpScreen = null;
+        });
+      }
+      this.syncRendering();
+      this.hud.update(gs);
+      return;
+    }
+
     // Run systems in deterministic order
     spawnSystem(gs, delta);
     movementSystem(gs, delta);
 
-    // Process all pending keys in a queue to handle multi-key frames
+    // Always decrement cooldown every frame (even when idle) so cooldown
+    // can expire naturally over time without requiring key presses.
+    combatSystem(gs, delta);
+
+    // Process pending keys. Only consume a key if the shot fired (justFired)
+    // or the key was a miss (no target). If a valid target was found but
+    // cooldown/overheat blocked the shot, leave the key in the queue to
+    // retry next frame so rapid keypresses aren't lost.
     while (gs.pendingKeys.length > 0) {
-      gs.lastKeyPressed = gs.pendingKeys.shift()!;
+      const key = gs.pendingKeys[0]; // peek, don't consume yet
+      gs.lastKeyPressed = key;
       targetSystem(gs);
+
+      const hadTarget = gs.targetedEnemyId !== null;
       combatSystem(gs, delta);
+
+      if (gs.justFired || !hadTarget || gs.overheated) {
+        gs.pendingKeys.shift(); // consume — shot fired, miss, or overheated
+      } else {
+        break; // cooldown blocked — leave key for next frame
+      }
     }
 
     heatBarSystem(gs, delta);
     difficultySystem(gs, delta);
+    xpSystem(gs);
     scoreSystem(gs);
     collisionSystem(gs);
+
+    // Remove dead enemies from the array so they don't block spawning
+    gs.enemies = gs.enemies.filter((e) => e.alive);
 
     // If game over just triggered, show overlay
     if (gs.gameOver) {
@@ -219,6 +269,10 @@ export class GameScene extends Phaser.Scene {
     if (this.gameOverScreen) {
       this.gameOverScreen.destroy();
       this.gameOverScreen = null;
+    }
+    if (this.levelUpScreen) {
+      this.levelUpScreen.destroy();
+      this.levelUpScreen = null;
     }
 
     // Clean up all game objects

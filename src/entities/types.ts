@@ -1,5 +1,12 @@
 import type { PlayerState } from './Player';
 import type { EnemyState } from './Enemy';
+import { GameConfig } from '../config';
+
+export interface PowerUpChoice {
+  id: string;
+  name: string;
+  description: string;
+}
 
 export interface GameState {
   player: PlayerState;
@@ -20,6 +27,12 @@ export interface GameState {
   nextEnemyId: number;
   gearDropped: boolean;
   justFired: boolean;
+  xp: number;
+  xpToNextLevel: number;
+  level: number;
+  activePowerUps: string[];
+  isPaused: boolean;
+  levelUpChoices: PowerUpChoice[];
 }
 
 export function createInitialGameState(): GameState {
@@ -42,5 +55,11 @@ export function createInitialGameState(): GameState {
     nextEnemyId: 1,
     gearDropped: false,
     justFired: false,
+    xp: 0,
+    xpToNextLevel: GameConfig.scoring.xpToLevelUp,
+    level: 1,
+    activePowerUps: [],
+    isPaused: false,
+    levelUpChoices: [],
   };
 }

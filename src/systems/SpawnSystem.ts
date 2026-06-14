@@ -34,7 +34,7 @@ export function spawnSystem(state: GameState, delta: number): GameState {
 
   state.spawnTimer -= delta;
 
-  if (state.spawnTimer <= 0 && state.enemies.length < GameConfig.enemies.maxOnScreen) {
+  if (state.spawnTimer <= 0) {
     const pools = getActiveWordPools(state.difficultyLevel);
     const word = pickRandomWord(pools);
     const enemy = createEnemy(word, state.nextEnemyId++);

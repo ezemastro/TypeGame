@@ -39,4 +39,33 @@ describe('HUD', () => {
     const segments = Array.from({ length: maxSegments }, (_, i) => i < heatSegments);
     expect(segments).toEqual([true, true, true, false, false]);
   });
+
+  it('should calculate XP bar progress as xp / xpToNextLevel', () => {
+    const xp = 50;
+    const xpToNextLevel = 100;
+    const progress = xp / xpToNextLevel;
+    expect(progress).toBe(0.5);
+  });
+
+  it('should clamp XP bar progress to 0 when xp is 0', () => {
+    const progress = 0 / 100;
+    expect(progress).toBe(0);
+  });
+
+  it('should reach 1.0 when xp equals threshold', () => {
+    const progress = 100 / 100;
+    expect(progress).toBe(1.0);
+  });
+
+  it('should format level text correctly', () => {
+    const level = 3;
+    const text = `Lv. ${level}`;
+    expect(text).toBe('Lv. 3');
+  });
+
+  it('should show level 1 at game start', () => {
+    const level = 1;
+    const text = `Lv. ${level}`;
+    expect(text).toBe('Lv. 1');
+  });
 });

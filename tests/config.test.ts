@@ -54,6 +54,22 @@ describe('GameConfig', () => {
     expect(GameConfig.scoring.xpScaleFactor).toBeGreaterThan(1);
   });
 
+  it('should have explosiveImpact config with pushRadius and pushStrength', () => {
+    expect(GameConfig.powerUps.explosiveImpact).toBeDefined();
+    expect(GameConfig.powerUps.explosiveImpact.pushRadius).toBeGreaterThan(0);
+    expect(GameConfig.powerUps.explosiveImpact.pushStrength).toBeGreaterThan(0);
+  });
+
+  it('should have quickCooling config with cooldownMultiplier', () => {
+    expect(GameConfig.powerUps.quickCooling).toBeDefined();
+    expect(GameConfig.powerUps.quickCooling.cooldownMultiplier).toBeGreaterThan(1);
+  });
+
+  it('should have sharpSight config with scoreMultiplier', () => {
+    expect(GameConfig.powerUps.sharpSight).toBeDefined();
+    expect(GameConfig.powerUps.sharpSight.scoreMultiplier).toBeGreaterThan(1);
+  });
+
   it('should be frozen (readonly) at runtime', () => {
     expect(Object.isFrozen(GameConfig)).toBe(true);
   });

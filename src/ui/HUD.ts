@@ -14,6 +14,36 @@ export function createHUD(scene: Phaser.Scene): HUD {
   });
   scoreText.setDepth(100);
 
+  // Level text (left of heat bar)
+  const levelText = scene.add.text(10, GameConfig.canvas.height - 52, 'Lv. 1', {
+    fontFamily: GameConfig.wordDisplay.fontFamily,
+    fontSize: '16px',
+    color: '#ffdd00',
+  });
+  levelText.setDepth(100);
+
+  // XP bar (top of screen, thin)
+  const xpBarWidth = GameConfig.canvas.width;
+  const xpBarHeight = 6;
+  const xpBarBg = scene.add.rectangle(
+    xpBarWidth / 2,
+    xpBarHeight / 2,
+    xpBarWidth,
+    xpBarHeight,
+    0x333333,
+  );
+  xpBarBg.setDepth(100);
+
+  const xpBarFill = scene.add.rectangle(
+    0,
+    xpBarHeight / 2,
+    0,
+    xpBarHeight,
+    0xffdd00,
+  );
+  xpBarFill.setOrigin(0, 0.5);
+  xpBarFill.setDepth(101);
+
   const heatRects: Phaser.GameObjects.Rectangle[] = [];
   const heatBarY = GameConfig.canvas.height - 30;
   const segWidth = 20;
@@ -32,6 +62,13 @@ export function createHUD(scene: Phaser.Scene): HUD {
   return {
     update(state: GameState): void {
       scoreText.setText(`Score: ${state.score}`);
+      levelText.setText(`Lv. ${state.level}`);
+
+      // Update XP bar width based on progress
+      const progress = state.xpToNextLevel > 0
+        ? Math.min(state.xp / state.xpToNextLevel, 1)
+        : 1;
+      xpBarFill.width = progress * xpBarWidth;
 
       const heatColorStr = state.overheated
         ? GameConfig.heatBar.overheatColor

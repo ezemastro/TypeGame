@@ -164,4 +164,74 @@ describe('HeatBarSystem', () => {
     expect(state.heatSegments).toBe(5);
     expect(state.overheated).toBe(true);
   });
+
+  it('should treat justFired as a hit regardless of targetedEnemyId (multi-key frame guard)', () => {
+    // Scenario: first key was a hit (justFired=true), last key was a miss (targetedEnemyId=null).
+    // heatBarSystem must NOT add heat when a shot was fired this frame.
+    const state = makeState({
+      lastKeyPressed: 'Z',
+      targetedEnemyId: null,     // last key was a miss
+      justFired: true,           // but a shot fired earlier this frame
+      heatSegments: 1,
+    });
+
+    heatBarSystem(state, 0);
+
+    // Should NOT add heat because a shot was fired this frame
+    expect(state.heatSegments).toBe(1);
+    // Should reset cooldown timer (treat as hit)
+    expect(state.cooldownTimer).toBe(0);
+  });
+
+  describe('Quick Cooling power-up', () => {
+    it('should drain heat twice as fast when QUICK_COOLING is active', () => {
+      const cooldownPerSegment = GameConfig.heatBar.cooldownPerSegment;
+      const state = makeState({
+        lastKeyPressed: null,
+        targetedEnemyId: null,
+        heatSegments: 3,
+        cooldownTimer: 0,
+        activePowerUps: ['QUICK_COOLING'],
+      });
+
+      // With 2x multiplier, 750ms delta should drain 1 segment
+      // (750 * 2 = 1500 >= cooldownPerSegment=1500)
+      heatBarSystem(state, cooldownPerSegment / 2);
+
+      expect(state.heatSegments).toBe(2); // one segment drained
+    });
+
+    it('should drain heat normally without QUICK_COOLING', () => {
+      const cooldownPerSegment = GameConfig.heatBar.cooldownPerSegment;
+      const state = makeState({
+        lastKeyPressed: null,
+        targetedEnemyId: null,
+        heatSegments: 3,
+        cooldownTimer: 0,
+        activePowerUps: [], // no power-up
+      });
+
+      // 750ms without multiplier should NOT drain a segment
+      // (750 < 1500 = cooldownPerSegment)
+      heatBarSystem(state, cooldownPerSegment / 2);
+
+      expect(state.heatSegments).toBe(3); // no segment drained yet
+    });
+
+    it('should drain two segments quickly with QUICK_COOLING', () => {
+      const cooldownPerSegment = GameConfig.heatBar.cooldownPerSegment;
+      const state = makeState({
+        lastKeyPressed: null,
+        targetedEnemyId: null,
+        heatSegments: 3,
+        cooldownTimer: 0,
+        activePowerUps: ['QUICK_COOLING'],
+      });
+
+      // 1500ms * 2 = 3000 effective cooldown time → drains 2 segments
+      heatBarSystem(state, cooldownPerSegment);
+
+      expect(state.heatSegments).toBe(1); // two segments drained
+    });
+  });
 });

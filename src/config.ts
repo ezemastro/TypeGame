@@ -81,9 +81,19 @@ export const GameConfig = Object.freeze({
     xpScaleFactor: 1.5,      // each level needs 1.5x more XP
   },
 
-  // Power-ups (for future use)
+  // Power-ups
   powerUps: {
     choicesPerLevel: 3,
     options: ['EXPLOSIVE_IMPACT', 'PIERCING_SHOT', 'SLOW_AURA', 'QUICK_COOLING'],
+    explosiveImpact: {
+      pushRadius: 150,
+      pushStrength: 100,
+    },
+    quickCooling: {
+      cooldownMultiplier: 2,
+    },
+    sharpSight: {
+      scoreMultiplier: 1.1,
+    },
   },
 });

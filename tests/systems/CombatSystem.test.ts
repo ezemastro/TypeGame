@@ -129,4 +129,130 @@ describe('CombatSystem', () => {
 
     expect(state.enemies[0].word).toBe('SOL');
   });
+
+  it('should apply 1.1x score multiplier per letter with SHARP_SIGHT', () => {
+    const enemy = createEnemy('SOL', 1);
+    const state = makeState([enemy], {
+      targetedEnemyId: 1,
+      shootCooldown: 0,
+      score: 0,
+      activePowerUps: ['SHARP_SIGHT'],
+    });
+
+    combatSystem(state, 0);
+
+    // pointsPerLetter=10 * 1.1 = 11
+    const expected = Math.floor(GameConfig.scoring.pointsPerLetter * GameConfig.powerUps.sharpSight.scoreMultiplier);
+    expect(state.score).toBe(expected);
+  });
+
+  it('should use normal points per letter without SHARP_SIGHT', () => {
+    const enemy = createEnemy('SOL', 1);
+    const state = makeState([enemy], {
+      targetedEnemyId: 1,
+      shootCooldown: 0,
+      score: 0,
+      activePowerUps: [],
+    });
+
+    combatSystem(state, 0);
+
+    expect(state.score).toBe(GameConfig.scoring.pointsPerLetter);
+  });
+
+  describe('Explosive Impact power-up', () => {
+    it('should push nearby enemies away when destroying an enemy with EXPLOSIVE_IMPACT', () => {
+      const target = createEnemy('A', 1);
+      target.x = 400;
+      target.y = 200;
+      const nearby = createEnemy('SOL', 2);
+      nearby.x = 450; // 50px away from target
+      nearby.y = 200;
+      const state = makeState(
+        [target, nearby],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          activePowerUps: ['EXPLOSIVE_IMPACT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Target is marked for destruction
+      expect(state.enemies[0].pendingDestruction).toBe(true);
+
+      // Nearby enemy should be pushed away from target
+      expect(state.enemies[1].x).toBeGreaterThan(450); // pushed right
+    });
+
+    it('should NOT push enemies outside pushRadius', () => {
+      const target = createEnemy('A', 1);
+      target.x = 400;
+      target.y = 200;
+      const far = createEnemy('SOL', 2);
+      far.x = 600; // 200px away, outside 150 radius
+      far.y = 200;
+
+      const state = makeState(
+        [target, far],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          activePowerUps: ['EXPLOSIVE_IMPACT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Far enemy should NOT be pushed
+      expect(state.enemies[1].x).toBe(600);
+    });
+
+    it('should NOT trigger explosive push without the power-up', () => {
+      const target = createEnemy('A', 1);
+      target.x = 400;
+      target.y = 200;
+      const nearby = createEnemy('SOL', 2);
+      nearby.x = 450;
+      nearby.y = 200;
+
+      const state = makeState(
+        [target, nearby],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          activePowerUps: [], // no power-ups
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Nearby enemy should NOT be pushed
+      expect(state.enemies[1].x).toBe(450);
+    });
+
+    it('should push enemies in the correct direction (away from destroyed enemy)', () => {
+      const target = createEnemy('A', 1);
+      target.x = 400;
+      target.y = 200;
+      const leftEnemy = createEnemy('LUZ', 2);
+      leftEnemy.x = 300; // 100px left of target
+      leftEnemy.y = 200;
+
+      const state = makeState(
+        [target, leftEnemy],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          activePowerUps: ['EXPLOSIVE_IMPACT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Should be pushed left (further away)
+      expect(state.enemies[1].x).toBeLessThan(300);
+    });
+  });
 });

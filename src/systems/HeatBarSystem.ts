@@ -18,7 +18,12 @@ export function heatBarSystem(state: GameState, delta: number): GameState {
   const wasMiss = keyWasPressed && state.targetedEnemyId === null;
   const wasHit = keyWasPressed && state.targetedEnemyId !== null;
 
-  if (wasMiss) {
+  // If a shot was fired this frame, it was definitely a hit — prevents
+  // multi-key frames where the last key was a miss from adding unfair heat.
+  if (state.justFired) {
+    // Hit: reset cooldown timer, no heat added
+    state.cooldownTimer = 0;
+  } else if (wasMiss) {
     // Wrong key: add heat, reset cooldown
     state.heatSegments += 1;
     state.cooldownTimer = 0;
@@ -34,7 +39,10 @@ export function heatBarSystem(state: GameState, delta: number): GameState {
     state.cooldownTimer = 0;
   } else {
     // Idle (no key press): accumulate cooldown, drain heat
-    state.cooldownTimer += delta;
+    const cooldownMultiplier = state.activePowerUps.includes('QUICK_COOLING')
+      ? GameConfig.powerUps.quickCooling.cooldownMultiplier
+      : 1;
+    state.cooldownTimer += delta * cooldownMultiplier;
 
     while (
       state.cooldownTimer >= GameConfig.heatBar.cooldownPerSegment &&

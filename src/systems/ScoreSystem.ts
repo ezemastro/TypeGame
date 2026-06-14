@@ -3,7 +3,10 @@ import { GameConfig } from '../config';
 
 export function scoreSystem(state: GameState): GameState {
   if (state.gearDropped) {
-    state.score += GameConfig.scoring.pointsPerWord;
+    const pointsPerWord = state.activePowerUps.includes('SHARP_SIGHT')
+      ? Math.floor(GameConfig.scoring.pointsPerWord * GameConfig.powerUps.sharpSight.scoreMultiplier)
+      : GameConfig.scoring.pointsPerWord;
+    state.score += pointsPerWord;
     state.gearDropped = false;
   }
 

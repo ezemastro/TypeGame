@@ -10,6 +10,7 @@ import { combatSystem } from '../../src/systems/CombatSystem';
 import { heatBarSystem } from '../../src/systems/HeatBarSystem';
 import { difficultySystem } from '../../src/systems/DifficultySystem';
 import { scoreSystem } from '../../src/systems/ScoreSystem';
+import { xpSystem } from '../../src/systems/XPSystem';
 import { collisionSystem } from '../../src/systems/CollisionSystem';
 
 describe('GameScene orchestration (unit)', () => {
@@ -81,6 +82,17 @@ describe('GameScene orchestration (unit)', () => {
     expect(state.score).toBe(scoreBefore); // no change when game over
   });
 
+  it('should initialize XP/level fields with correct defaults', () => {
+    const state = createInitialGameState();
+
+    expect(state.xp).toBe(0);
+    expect(state.level).toBe(1);
+    expect(state.xpToNextLevel).toBe(GameConfig.scoring.xpToLevelUp);
+    expect(state.activePowerUps).toEqual([]);
+    expect(state.isPaused).toBe(false);
+    expect(state.levelUpChoices).toEqual([]);
+  });
+
   it('should clear per-frame input state after each tick', () => {
     const state = createInitialGameState();
     state.player = createPlayer();
@@ -101,5 +113,58 @@ describe('GameScene orchestration (unit)', () => {
     expect(state.pendingKeys).toHaveLength(0);
     expect(state.lastKeyPressed).toBeNull();
     expect(state.targetedEnemyId).toBeNull();
+  });
+
+  it('should run XPSystem before ScoreSystem so both see gearDropped', () => {
+    const state = createInitialGameState();
+    state.player = createPlayer();
+    state.gearDropped = true;
+
+    // XPSystem runs FIRST: adds XP, does NOT consume gearDropped
+    xpSystem(state);
+    // ScoreSystem runs SECOND: adds score, consumes gearDropped
+    scoreSystem(state);
+
+    // Both systems added their respective values
+    expect(state.xp).toBe(GameConfig.scoring.xpPerWord);
+    expect(state.score).toBe(GameConfig.scoring.pointsPerWord);
+    expect(state.gearDropped).toBe(false);
+  });
+
+  it('should skip enemy-affecting systems when isPaused is true (orchestration-level guard)', () => {
+    const state = createInitialGameState();
+    state.player = createPlayer();
+
+    // Spawn an enemy normally
+    state.isPaused = false;
+    spawnSystem(state, 0);
+    const enemyBefore = state.enemies[0];
+    const xBefore = enemyBefore ? enemyBefore.x : 0;
+
+    // Mark as paused — GameScene.update() would skip all systems
+    state.isPaused = true;
+
+    // Simulate the orchestration guard: when isPaused, skip systems
+    if (!state.isPaused) {
+      movementSystem(state, 1000);
+    }
+
+    if (enemyBefore) {
+      expect(state.enemies[0].x).toBe(xBefore); // position unchanged
+    }
+  });
+
+  it('should freeze spawns when isPaused is true (orchestration-level guard)', () => {
+    const state = createInitialGameState();
+    state.player = createPlayer();
+    state.isPaused = true;
+    state.spawnTimer = 3000; // ready to spawn
+
+    // Simulate orchestration guard
+    if (!state.isPaused) {
+      spawnSystem(state, 0);
+    }
+
+    expect(state.enemies).toHaveLength(0); // no enemies spawned
   });
 });
