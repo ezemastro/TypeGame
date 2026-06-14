@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* Ensure the game canvas fills its container properly */
+#game-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Remove default margins */
+body {
+  margin: 0;
+  overflow: hidden;
+  background-color: #1a1a2e;
+}

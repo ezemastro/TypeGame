@@ -1,0 +1,89 @@
+export const GameConfig = Object.freeze({
+  // Canvas
+  canvas: {
+    width: 800,
+    height: 600,
+    backgroundColor: '#1a1a2e',
+  },
+
+  // Player (Robot)
+  player: {
+    width: 50,
+    height: 50,
+    color: '#00ff88',
+    x: 400,       // starting X (center)
+    y: 500,       // bottom area
+    speed: 300,   // pixels per second
+  },
+
+  // Enemies
+  enemies: {
+    width: 60,
+    height: 60,
+    color: '#ff4444',
+    baseSpeed: 80,       // pixels per second — base before difficulty scaling
+    speedVariance: 0.2,  // ±20% random variance per enemy
+    spawnInterval: 2000, // ms between spawns (base, before difficulty scaling)
+    maxOnScreen: 8,
+  },
+
+  // Words
+  words: {
+    easy: ['A', 'E', 'I', 'O', 'U', 'LA', 'EL', 'UN', 'MI', 'TU', 'SOL', 'PAN', 'LUZ', 'MAR', 'PEZ'],
+    medium: ['CASA', 'MESA', 'ROSA', 'LUNA', 'GATO', 'PERRO', 'ARBOL', 'FUEGO', 'NUBE', 'LLAVE'],
+    hard: ['PLANTA', 'ESTRELLA', 'CAMINO', 'VENTANA', 'ESCUELA', 'CUADERNO', 'JIRAFA', 'MURCIELAGO'],
+  },
+
+  // Word display on enemies
+  wordDisplay: {
+    fontFamily: 'monospace',
+    fontSize: 16,
+    color: '#ffffff',
+  },
+
+  // Shooting / Combat
+  shooting: {
+    cooldown: 200,       // ms between shots
+    projectileSpeed: 600,
+    projectileColor: '#00ff88',
+    projectileWidth: 4,
+    projectileHeight: 12,
+  },
+
+  // Heat Bar (Anti-spam)
+  heatBar: {
+    maxSegments: 5,
+    overheatDuration: 2000, // ms
+    cooldownPerSegment: 1500, // ms to cool down one segment
+    color: '#ff8800',
+    overheatColor: '#ff0000',
+  },
+
+  // Difficulty scaling
+  difficulty: {
+    scaleInterval: 10000,    // ms between difficulty increases
+    speedMultiplierPerTick: 0.05,  // +5% speed per tick
+    spawnRateMultiplierPerTick: 0.03, // spawn 3% faster per tick
+    wordComplexityRamp: [     // which word pools at which difficulty level
+      { level: 0, pools: ['easy'] },
+      { level: 5, pools: ['easy', 'medium'] },
+      { level: 10, pools: ['medium', 'hard'] },
+    ],
+  },
+
+  // Scoring
+  scoring: {
+    pointsPerLetter: 10,
+    pointsPerWord: 50,       // bonus for finishing a whole word
+    xpPerLetter: 1,
+    xpPerWord: 5,
+    xpToLevelUp: 100,        // base XP needed (scales per level)
+    xpScaleFactor: 1.5,      // each level needs 1.5x more XP
+  },
+
+  // Power-ups (for future use)
+  powerUps: {
+    choicesPerLevel: 3,
+    options: ['EXPLOSIVE_IMPACT', 'PIERCING_SHOT', 'SLOW_AURA', 'QUICK_COOLING'],
+  },
+});
