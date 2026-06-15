@@ -11,6 +11,7 @@ describe('GameConfig', () => {
       'wordDisplay',
       'shooting',
       'heatBar',
+      'world',
       'difficulty',
       'scoring',
       'powerUps',

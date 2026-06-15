@@ -59,6 +59,11 @@ export const GameConfig = Object.freeze({
     overheatColor: '#ff0000',
   },
 
+  // Scrolling
+  world: {
+    scrollSpeed: 80,         // px/s — base world scroll speed
+  },
+
   // Difficulty scaling
   difficulty: {
     scaleInterval: 10000,    // ms between difficulty increases

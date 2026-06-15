@@ -4,7 +4,7 @@ import { GameScene } from './scenes/GameScene';
 import { GameConfig } from './config';
 
 const config: Phaser.Types.Core.GameConfig = {
-  type: Phaser.AUTO,
+  type: Phaser.CANVAS,
   width: GameConfig.canvas.width,
   height: GameConfig.canvas.height,
   backgroundColor: GameConfig.canvas.backgroundColor,

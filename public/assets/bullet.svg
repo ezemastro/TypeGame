@@ -1,4 +1,4 @@
-<svg viewBox="0 0 12 24" xmlns="http://www.w3.org/2000/svg" role="img">
+<svg width="12" height="24" viewBox="0 0 12 24" xmlns="http://www.w3.org/2000/svg" role="img">
   <title>TypeBot — Bullet / Projectile</title>
   <desc>Neon green capsule projectile with white core and top glow. Internal pulse animation only — movement is handled by the game engine.</desc>
 

@@ -1,134 +1,73 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <!-- ===== Grass Background ===== -->
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- ===== Full Green Grass Background ===== -->
   <rect width="128" height="128" fill="#7CB342"/>
 
-  <!-- ===== Dirt Path ===== -->
-  <!-- Diagonal ~35px strip from bottom-left to top-right at ~45° -->
-  <!-- Corner-to-corner ensures natural seamlessness when tiled -->
-  <line x1="0" y1="128" x2="128" y2="0" stroke="#A1887F" stroke-width="35"/>
+  <!-- ===== Grass Texture: scattered darker green dots ===== -->
+  <!-- Distributed across the entire tile for natural look -->
 
-  <!-- ===== Path Texture: furrow lines (#8D6E63) ===== -->
-  <!-- Short strokes perpendicular to path direction, some wavy -->
-  <g stroke="#8D6E63" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7">
-    <!-- Straight furrows along center line -->
-    <line x1="7"  y1="119" x2="14"  y2="112"/>
-    <line x1="20" y1="106" x2="27"  y2="99"/>
-    <line x1="35" y1="91"  x2="42"  y2="84"/>
-    <line x1="48" y1="78"  x2="55"  y2="71"/>
-    <line x1="62" y1="64"  x2="69"  y2="57"/>
-    <line x1="75" y1="51"  x2="82"  y2="44"/>
-    <line x1="89" y1="37"  x2="96"  y2="30"/>
-    <line x1="103" y1="23" x2="110" y2="16"/>
-    <line x1="116" y1="10" x2="123" y2="3"/>
+  <!-- Interior dots (no edge constraints) -->
+  <circle cx="20" cy="30" r="3" fill="#558B2F"/>
+  <circle cx="45" cy="15" r="2.5" fill="#689F38"/>
+  <circle cx="65" cy="45" r="2" fill="#558B2F"/>
+  <circle cx="85" cy="25" r="3.5" fill="#558B2F"/>
+  <circle cx="105" cy="35" r="2" fill="#689F38"/>
+  <circle cx="115" cy="55" r="2.5" fill="#558B2F"/>
+  <circle cx="15" cy="60" r="2" fill="#689F38"/>
+  <circle cx="40" cy="80" r="3" fill="#558B2F"/>
+  <circle cx="55" cy="70" r="2" fill="#689F38"/>
+  <circle cx="75" cy="90" r="2.5" fill="#558B2F"/>
+  <circle cx="95" cy="80" r="2" fill="#689F38"/>
+  <circle cx="110" cy="100" r="3" fill="#558B2F"/>
+  <circle cx="30" cy="105" r="2" fill="#689F38"/>
+  <circle cx="50" cy="115" r="2.5" fill="#558B2F"/>
+  <circle cx="70" cy="105" r="2" fill="#689F38"/>
+  <circle cx="90" cy="115" r="2" fill="#558B2F"/>
+  <circle cx="10" cy="90" r="2.5" fill="#689F38"/>
+  <circle cx="60" cy="35" r="1.5" fill="#689F38"/>
+  <circle cx="100" cy="65" r="1.5" fill="#558B2F"/>
+  <circle cx="35" cy="50" r="1.5" fill="#558B2F"/>
+  <circle cx="80" cy="55" r="2" fill="#558B2F"/>
+  <circle cx="25" cy="75" r="1.5" fill="#689F38"/>
+  <circle cx="120" cy="15" r="1.5" fill="#689F38"/>
 
-    <!-- Upper-side offset furrows -->
-    <line x1="14" y1="104" x2="21"  y2="97"/>
-    <line x1="42" y1="76"  x2="49"  y2="69"/>
-    <line x1="70" y1="48"  x2="77"  y2="41"/>
-    <line x1="98" y1="20"  x2="105" y2="13"/>
+  <!-- Small grass blade clusters -->
+  <rect x="22" y="22" width="1.5" height="4" fill="#558B2F" rx="0.5"/>
+  <rect x="68" y="38" width="1.5" height="3.5" fill="#558B2F" rx="0.5"/>
+  <rect x="102" y="48" width="1.5" height="4" fill="#689F38" rx="0.5"/>
+  <rect x="42" y="92" width="1.5" height="3" fill="#558B2F" rx="0.5"/>
+  <rect x="88" y="108" width="1.5" height="3.5" fill="#689F38" rx="0.5"/>
+  <rect x="12" y="42" width="1.5" height="3" fill="#558B2F" rx="0.5"/>
+  <rect x="56" y="88" width="1.5" height="4" fill="#689F38" rx="0.5"/>
 
-    <!-- Lower-side offset furrows -->
-    <line x1="6"  y1="122" x2="12"  y2="116"/>
-    <line x1="30" y1="96"  x2="36"  y2="90"/>
-    <line x1="55" y1="71"  x2="61"  y2="65"/>
-    <line x1="85" y1="41"  x2="91"  y2="35"/>
-    <line x1="110" y1="16" x2="116" y2="10"/>
+  <!-- ===== Small flower dots (white + yellow, 1-2 per tile max) ===== -->
+  <circle cx="48" cy="55" r="2.5" fill="#FFFFFF"/>
+  <circle cx="95" cy="95" r="2" fill="#FFD740"/>
 
-    <!-- Wavy furrows for organic feel -->
-    <path d="M24 100 Q27 97 30 100 Q33 103 36 100"/>
-    <path d="M52 72  Q55 69 58 72  Q61 75 64 72"/>
-    <path d="M80 44  Q83 41 86 44  Q89 47 92 44"/>
-    <path d="M45 81  Q47 78 50 81"/>
-    <path d="M68 53  Q70 50 73 53"/>
-    <path d="M95 27  Q97 24 100 27"/>
-  </g>
+  <!-- ===== Edge-continuity pairs for seamless tiling ===== -->
 
-  <!-- ===== Grass Texture: dark green dots and blades ===== -->
-  <!-- Dots placed in x+y<103 (top-left grass) and x+y>153 (bottom-right grass) -->
+  <!-- Left/Right edge pairs -->
+  <circle cx="3" cy="18" r="2" fill="#558B2F"/>
+  <circle cx="125" cy="18" r="2" fill="#558B2F"/>
+  <circle cx="2" cy="45" r="2.5" fill="#689F38"/>
+  <circle cx="126" cy="45" r="2.5" fill="#689F38"/>
+  <circle cx="4" cy="70" r="1.5" fill="#558B2F"/>
+  <circle cx="124" cy="70" r="1.5" fill="#558B2F"/>
+  <circle cx="2" cy="98" r="2" fill="#689F38"/>
+  <circle cx="126" cy="98" r="2" fill="#689F38"/>
+  <circle cx="3" cy="118" r="1.5" fill="#558B2F"/>
+  <circle cx="125" cy="118" r="1.5" fill="#558B2F"/>
 
-  <!-- Cluster 1: top-left grass -->
-  <circle cx="15" cy="12" r="3"   fill="#558B2F"/>
-  <circle cx="18" cy="15" r="2"   fill="#689F38"/>
-  <circle cx="12" cy="16" r="1.5" fill="#558B2F"/>
+  <!-- Top/Bottom edge pairs -->
+  <circle cx="28" cy="2" r="2" fill="#689F38"/>
+  <circle cx="28" cy="126" r="2" fill="#689F38"/>
+  <circle cx="58" cy="3" r="2.5" fill="#558B2F"/>
+  <circle cx="58" cy="125" r="2.5" fill="#558B2F"/>
+  <circle cx="82" cy="2" r="1.5" fill="#689F38"/>
+  <circle cx="82" cy="126" r="1.5" fill="#689F38"/>
+  <circle cx="110" cy="3" r="2" fill="#558B2F"/>
+  <circle cx="110" cy="125" r="2" fill="#558B2F"/>
 
-  <!-- Cluster 2: upper grass -->
-  <circle cx="55" cy="10" r="4"   fill="#558B2F"/>
-  <circle cx="58" cy="13" r="2"   fill="#689F38"/>
-
-  <!-- Scattered top-left dots -->
-  <circle cx="50" cy="35" r="2.5" fill="#689F38"/>
-  <circle cx="85" cy="8"  r="2"   fill="#558B2F"/>
-  <circle cx="88" cy="5"  r="1"   fill="#558B2F"/>
-  <circle cx="30" cy="45" r="3"   fill="#558B2F"/>
-  <circle cx="33" cy="42" r="1.5" fill="#689F38"/>
-  <circle cx="70" cy="22" r="1.5" fill="#558B2F"/>
-  <circle cx="10" cy="55" r="2"   fill="#689F38"/>
-  <circle cx="45" cy="42" r="2.5" fill="#558B2F"/>
-  <circle cx="20" cy="28" r="2"   fill="#558B2F"/>
-  <circle cx="60" cy="5"  r="1.5" fill="#689F38"/>
-  <circle cx="78" cy="18" r="1"   fill="#689F38"/>
-  <circle cx="5"  cy="35" r="2"   fill="#558B2F"/>
-  <circle cx="92" cy="12" r="1"   fill="#689F38"/>
-
-  <!-- Large "mata" cluster (top-left) -->
-  <circle cx="38" cy="60" r="4.5" fill="#558B2F"/>
-  <circle cx="42" cy="57" r="2.5" fill="#689F38"/>
-  <circle cx="35" cy="56" r="2"   fill="#689F38"/>
-
-  <!-- Cluster 3: bottom-right grass -->
-  <circle cx="110" cy="80" r="3"   fill="#558B2F"/>
-  <circle cx="113" cy="78" r="2"   fill="#689F38"/>
-
-  <!-- Cluster 4: bottom-right grass -->
-  <circle cx="100" cy="108" r="4"   fill="#558B2F"/>
-  <circle cx="103" cy="106" r="1.5" fill="#689F38"/>
-
-  <!-- Scattered bottom-right dots -->
-  <circle cx="70"  cy="98"  r="2.5" fill="#689F38"/>
-  <circle cx="120" cy="62"  r="2"   fill="#558B2F"/>
-  <circle cx="85"  cy="92"  r="1.5" fill="#558B2F"/>
-  <circle cx="60"  cy="118" r="2"   fill="#689F38"/>
-  <circle cx="63"  cy="115" r="1"   fill="#558B2F"/>
-  <circle cx="80"  cy="108" r="1.5" fill="#689F38"/>
-  <circle cx="108" cy="50" r="2"   fill="#558B2F"/>
-  <circle cx="45"  cy="118" r="2"   fill="#689F38"/>
-  <circle cx="118" cy="115" r="3"   fill="#558B2F"/>
-  <circle cx="125" cy="95" r="1.5" fill="#689F38"/>
-  <circle cx="55"  cy="105" r="2"   fill="#558B2F"/>
-  <circle cx="92"  cy="72" r="1.5" fill="#558B2F"/>
-
-  <!-- Large "mata" cluster (bottom-right) -->
-  <circle cx="75"  cy="88" r="4"   fill="#558B2F"/>
-  <circle cx="78"  cy="85" r="2.5" fill="#689F38"/>
-  <circle cx="72"  cy="91" r="1.5" fill="#689F38"/>
-
-  <!-- Tiny rect "blades" for variety -->
-  <rect x="22" y="63"   width="1.5" height="3"   fill="#558B2F" rx="0.5"/>
-  <rect x="66" y="28"   width="1.5" height="2.5" fill="#558B2F" rx="0.5"/>
-  <rect x="105" y="96"  width="1.5" height="3"   fill="#689F38" rx="0.5"/>
-  <rect x="48" y="25"   width="1.5" height="2"   fill="#689F38" rx="0.5"/>
-
-  <!-- ===== Edge-continuity dots for seamlessness ===== -->
-  <!-- Dots placed very close to each edge so adjacent tiles connect visually -->
-  <!-- Each edge pair ensures no blank strip appears at tile boundaries -->
-
-  <!-- Near left edge + matching near right edge -->
-  <circle cx="2"   cy="20" r="1"   fill="#558B2F"/>
-  <circle cx="126" cy="20" r="1"   fill="#689F38"/>
-  <circle cx="3"   cy="72" r="1.5" fill="#689F38"/>
-  <circle cx="125" cy="72" r="1"   fill="#558B2F"/>
-  <circle cx="1"   cy="110" r="1"  fill="#558B2F"/>
-  <circle cx="127" cy="110" r="2"  fill="#689F38"/>
-
-  <!-- Near top edge + matching near bottom edge -->
-  <circle cx="25" cy="2"   r="1.5" fill="#558B2F"/>
-  <circle cx="25" cy="126" r="1"   fill="#689F38"/>
-  <circle cx="80" cy="1"   r="1"   fill="#689F38"/>
-  <circle cx="80" cy="127" r="1.5" fill="#558B2F"/>
-  <circle cx="112" cy="2"  r="1"   fill="#558B2F"/>
-  <circle cx="112" cy="126" r="1"  fill="#558B2F"/>
-
-  <!-- Near corners (wraps diagonally) -->
-  <circle cx="2"   cy="2"   r="1.5" fill="#689F38"/>
-  <circle cx="126" cy="126" r="1.5" fill="#689F38"/>
+  <!-- Corner pairs (diagonal wrap) -->
+  <circle cx="2" cy="2" r="2" fill="#558B2F"/>
+  <circle cx="126" cy="126" r="2" fill="#558B2F"/>
 </svg>

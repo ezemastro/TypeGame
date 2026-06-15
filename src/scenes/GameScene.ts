@@ -19,6 +19,7 @@ import { GameConfig } from '../config';
 interface EnemyRender {
   image: Phaser.GameObjects.Image;
   text: Phaser.GameObjects.Text;
+  textBg: Phaser.GameObjects.Rectangle;
 }
 
 interface ProjectileRender {
@@ -147,7 +148,7 @@ export class GameScene extends Phaser.Scene {
     const gs = this.gameState;
 
     // Background scroll
-    const scrollSpeed = 60; // px/s — could tie to difficulty later
+    const scrollSpeed = GameConfig.world.scrollSpeed;
     this.tileSprite.tilePositionY += scrollSpeed * (delta / 1000);
 
     // Parallax movement
@@ -340,8 +341,8 @@ export class GameScene extends Phaser.Scene {
         img.setDepth(5);
 
         const text = this.add.text(
-          enemy.x - enemy.width / 2,
-          enemy.y - enemy.height,
+          enemy.x,
+          enemy.y - enemy.height / 2 - 10,
           enemy.word,
           {
             fontFamily: GameConfig.wordDisplay.fontFamily,
@@ -349,24 +350,41 @@ export class GameScene extends Phaser.Scene {
             color: GameConfig.wordDisplay.color,
           },
         );
-        text.setDepth(6);
+        text.setOrigin(0.5, 1); // center horizontally, bottom-aligned
 
-        render = { image: img, text };
+        // Dark background behind word text for readability
+        const textBg = this.add.rectangle(
+          enemy.x,
+          enemy.y - enemy.height / 2 - 10,
+          text.width + 8,
+          18,
+          0x000000,
+          0.5,
+        );
+        textBg.setDepth(5);
+
+        render = { image: img, text, textBg };
         this.enemyRenderMap.set(enemy.id, render);
       }
 
       render.image.setPosition(enemy.x, enemy.y);
       render.text.setPosition(
-        enemy.x - enemy.width / 2,
-        enemy.y - enemy.height,
+        enemy.x,
+        enemy.y - enemy.height / 2 - 10,
       );
       render.text.setText(enemy.word);
+      render.textBg.setPosition(
+        enemy.x,
+        enemy.y - enemy.height / 2 - 10,
+      );
+      render.textBg.setSize(render.text.width + 8, 18);
     }
 
     for (const [id, render] of this.enemyRenderMap) {
       if (!currentIds.has(id)) {
         render.image.destroy();
         render.text.destroy();
+        render.textBg.destroy();
         this.enemyRenderMap.delete(id);
       }
     }
@@ -417,6 +435,7 @@ export class GameScene extends Phaser.Scene {
     for (const [, render] of this.enemyRenderMap) {
       render.image.destroy();
       render.text.destroy();
+      render.textBg.destroy();
     }
     this.enemyRenderMap.clear();
     for (const proj of this.projectiles) {
