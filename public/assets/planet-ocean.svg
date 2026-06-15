@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="110" viewBox="0 0 80 110" role="img">
+  <title>AstroType — Ocean Planet</title>
+  <desc>Deep blue ocean planet with white cloud wisps. No rings. Floating in space.</desc>
+
+  <!-- Planet body -->
+  <circle cx="40" cy="45" r="25" fill="#0288D1" />
+
+  <!-- Dark crescent (right shadow) -->
+  <circle cx="50" cy="42" r="22" fill="#01579B" opacity="0.4" />
+
+  <!-- Cloud wisps -->
+  <ellipse cx="32" cy="32" rx="14" ry="4" fill="#FFFFFF" opacity="0.35" />
+  <ellipse cx="38" cy="50" rx="16" ry="3.5" fill="#FFFFFF" opacity="0.3" />
+  <ellipse cx="26" cy="42" rx="10" ry="3" fill="#FFFFFF" opacity="0.25" />
+
+  <!-- Surface highlight -->
+  <circle cx="30" cy="34" r="7" fill="#4FC3F7" opacity="0.4" />
+
+  <!-- Small island/landmass hint -->
+  <circle cx="48" cy="38" r="5" fill="#81C784" opacity="0.3" />
+</svg>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="110" viewBox="0 0 80 110" role="img">
+  <title>AstroType — Gas Giant</title>
+  <desc>Blue-green gas giant planet with horizontal atmospheric bands. Floating in space.</desc>
+
+  <!-- Planet body -->
+  <circle cx="40" cy="45" r="25" fill="#00897B" />
+
+  <!-- Dark crescent (right shadow) -->
+  <circle cx="50" cy="42" r="22" fill="#004D40" opacity="0.35" />
+
+  <!-- Atmospheric bands (horizontal ellipses, clipped by planet circle) -->
+  <ellipse cx="40" cy="32" rx="24" ry="5" fill="#26A69A" opacity="0.5" />
+  <ellipse cx="40" cy="40" rx="25" ry="4" fill="#004D40" opacity="0.3" />
+  <ellipse cx="40" cy="48" rx="24" ry="5" fill="#4DB6AC" opacity="0.4" />
+  <ellipse cx="40" cy="55" rx="22" ry="4" fill="#26A69A" opacity="0.35" />
+
+  <!-- Surface highlight -->
+  <circle cx="30" cy="34" r="6" fill="#B2DFDB" opacity="0.3" />
+</svg>

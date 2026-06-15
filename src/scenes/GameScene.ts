@@ -149,7 +149,10 @@ export class GameScene extends Phaser.Scene {
   private spawnParallaxItems(): void {
     // Ground elements — trees, rocks, bushes
     // Place them in left/right thirds only, never in the center lane (player path)
-    const textures: Array<'planet' | 'meteorite' | 'asteroid'> = ['planet', 'meteorite', 'asteroid'];
+    const textures: Array<'planet' | 'planet-ice' | 'planet-gas' | 'planet-rocky' | 'planet-ocean' | 'planet-desert' | 'meteorite' | 'asteroid' | 'comet'> = [
+      'planet', 'planet-ice', 'planet-gas', 'planet-rocky', 'planet-ocean', 'planet-desert',
+      'meteorite', 'asteroid', 'comet',
+    ];
     const groundCount = 10;
     const laneMargin = 140; // keep this far from center on each side
     const centerX = GameConfig.canvas.width / 2;
@@ -446,7 +449,17 @@ export class GameScene extends Phaser.Scene {
 
       let render = this.enemyRenderMap.get(enemy.id);
       if (!render) {
-        const textureKey = Math.random() > 0.5 ? 'enemy-fighter' : 'enemy-scout';
+        const roll = Math.random();
+        let textureKey: string;
+        if (roll < 0.25) {
+          textureKey = 'enemy-fighter';
+        } else if (roll < 0.5) {
+          textureKey = 'enemy-scout';
+        } else if (roll < 0.75) {
+          textureKey = 'enemy-comet';
+        } else {
+          textureKey = 'enemy-asteroid';
+        }
         const img = this.add.image(enemy.x, enemy.y, textureKey);
         const enemyScale = enemy.width / img.width;
         img.setScale(enemyScale);
@@ -504,8 +517,8 @@ export class GameScene extends Phaser.Scene {
             repeat: -1,
             ease: 'Sine.easeInOut',
           });
-        } else {
-          // Robot: scale pulse — breathing/menacing feel
+        } else if (textureKey === 'enemy-fighter') {
+          // Fighter: scale pulse — breathing/menacing feel
           this.tweens.add({
             targets: img,
             scaleX: { from: 1, to: 1.1 },
@@ -520,6 +533,45 @@ export class GameScene extends Phaser.Scene {
             targets: img,
             angle: { from: -3, to: 3 },
             duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+        } else if (textureKey === 'enemy-comet') {
+          // Comet: fiery pulse (opacity flicker)
+          this.tweens.add({
+            targets: img,
+            alpha: { from: 0.75, to: 1 },
+            duration: 400,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+          // Float: gentle vertical drift
+          this.tweens.add({
+            targets: img,
+            y: enemy.y - 4,
+            duration: 500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+        } else if (textureKey === 'enemy-asteroid') {
+          // Asteroid: slow wobble rotation
+          this.tweens.add({
+            targets: img,
+            angle: { from: -5, to: 5 },
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+          // Subtle scale pulse
+          this.tweens.add({
+            targets: img,
+            scaleX: { from: 1, to: 1.05 },
+            scaleY: { from: 1, to: 1.05 },
+            duration: 500,
             yoyo: true,
             repeat: -1,
             ease: 'Sine.easeInOut',
