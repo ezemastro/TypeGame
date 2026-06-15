@@ -39,6 +39,11 @@ interface ParallaxItem {
 export class GameScene extends Phaser.Scene {
   private gameState!: GameState;
   private playerImage!: Phaser.GameObjects.Image;
+  private shipPiercing!: Phaser.GameObjects.Image;
+  private shipExplosive!: Phaser.GameObjects.Image;
+  private shipDual!: Phaser.GameObjects.Image;
+  private shipCooling!: Phaser.GameObjects.Image;
+  private shipSight!: Phaser.GameObjects.Image;
   private enemyRenderMap: Map<number, EnemyRender> = new Map();
   private projectiles: ProjectileRender[] = [];
   private hud!: HUD;
@@ -97,6 +102,22 @@ export class GameScene extends Phaser.Scene {
     this.playerImage.setScale(playerScale);
     this.playerImage.setDepth(10);
 
+    // Ship power-up overlays (hidden until power-up active, follow player position)
+    this.shipPiercing = this.add.image(p.x, p.y, 'ship-piercing');
+    this.shipPiercing.setScale(playerScale).setDepth(11).setVisible(false);
+
+    this.shipExplosive = this.add.image(p.x, p.y, 'ship-explosive');
+    this.shipExplosive.setScale(playerScale).setDepth(11).setVisible(false);
+
+    this.shipDual = this.add.image(p.x, p.y, 'ship-dual');
+    this.shipDual.setScale(playerScale).setDepth(11).setVisible(false);
+
+    this.shipCooling = this.add.image(p.x, p.y, 'ship-cooling');
+    this.shipCooling.setScale(playerScale).setDepth(9).setVisible(false);
+
+    this.shipSight = this.add.image(p.x, p.y, 'ship-sight');
+    this.shipSight.setScale(playerScale).setDepth(11).setVisible(false);
+
     // Player continuous bounce tween (CSS animations lost in Canvas2D)
     this.tweens.add({
       targets: this.playerImage,
@@ -145,8 +166,8 @@ export class GameScene extends Phaser.Scene {
         }
         return;
       }
-      // Debug: instant level-up
-      if ((event.key === 'l' || event.key === 'L') && !this.gameState.isPaused) {
+      // Debug: instant level-up (K — no aparece en palabras españolas del juego)
+      if ((event.key === 'k' || event.key === 'K') && !this.gameState.isPaused) {
         this.gameState.xp = this.gameState.xpToNextLevel;
         return;
       }
@@ -222,6 +243,7 @@ export class GameScene extends Phaser.Scene {
       }
       this.syncAuraRendering();
       this.syncWeaponRendering();
+      this.syncShipRendering();
       this.syncRendering();
       this.hud.update(gs);
       return;
@@ -633,6 +655,11 @@ export class GameScene extends Phaser.Scene {
 
     // Player position
     this.playerImage.setPosition(gs.player.x, gs.player.y);
+    this.shipPiercing.setPosition(gs.player.x, gs.player.y);
+    this.shipExplosive.setPosition(gs.player.x, gs.player.y);
+    this.shipDual.setPosition(gs.player.x, gs.player.y);
+    this.shipCooling.setPosition(gs.player.x, gs.player.y);
+    this.shipSight.setPosition(gs.player.x, gs.player.y);
   }
 
   private syncAuraRendering(): void {
@@ -672,6 +699,15 @@ export class GameScene extends Phaser.Scene {
     this.weaponSight.setVisible(gs.activePowerUps.includes('SHARP_SIGHT'));
   }
 
+  private syncShipRendering(): void {
+    const gs = this.gameState;
+    this.shipPiercing.setVisible(gs.activePowerUps.includes('PIERCING_SHOT'));
+    this.shipExplosive.setVisible(gs.activePowerUps.includes('EXPLOSIVE_IMPACT'));
+    this.shipDual.setVisible(gs.activePowerUps.includes('DUAL_SHOT'));
+    this.shipCooling.setVisible(gs.activePowerUps.includes('QUICK_COOLING'));
+    this.shipSight.setVisible(gs.activePowerUps.includes('SHARP_SIGHT'));
+  }
+
   private spawnExplosion(x: number, y: number): void {
     const circle = this.add.circle(x, y, 10, 0xFF5252, 0.6);
     circle.setDepth(20);
@@ -696,6 +732,11 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.playerImage.destroy();
+    this.shipPiercing.destroy();
+    this.shipExplosive.destroy();
+    this.shipDual.destroy();
+    this.shipCooling.destroy();
+    this.shipSight.destroy();
     for (const [, render] of this.enemyRenderMap) {
       render.image.destroy();
       render.text.destroy();

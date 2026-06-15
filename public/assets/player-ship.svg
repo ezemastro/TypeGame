@@ -1,40 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80" role="img">
   <title>AstroType — Player Starship</title>
-  <desc>Top-down view of cyan starfighter with swept wings, pointed nose, and twin engine nozzles. Power core signature element. Static for Phaser.CANVAS.</desc>
+  <desc>Simple bold starfighter silhouette. Large geometric hull, swept wings, single cockpit. Power core signature. Static for Phaser.CANVAS.</desc>
 
-  <!-- Ground shadow -->
-  <ellipse cx="32" cy="74" rx="20" ry="3.5" fill="#000000" opacity="0.15" />
+  <!-- Shadow -->
+  <ellipse cx="32" cy="74" rx="22" ry="4" fill="#000000" opacity="0.15" />
 
-  <!-- Twin engine nozzles (rear) -->
-  <circle cx="24" cy="60" r="4" fill="#FFFFFF" opacity="0.5" />
-  <circle cx="40" cy="60" r="4" fill="#FFFFFF" opacity="0.5" />
-  <circle cx="24" cy="60" r="2.5" fill="#00E5FF" opacity="0.7" />
-  <circle cx="40" cy="60" r="2.5" fill="#00E5FF" opacity="0.7" />
-
-  <!-- Left wing (swept-back look via offset positioning) -->
-  <rect x="2" y="32" width="14" height="26" rx="3" fill="#00B8D4" />
+  <!-- Left wing (large, bold) -->
+  <rect x="4" y="34" width="14" height="28" rx="4" fill="#00B8D4" />
 
   <!-- Right wing -->
-  <rect x="48" y="32" width="14" height="26" rx="3" fill="#00B8D4" />
+  <rect x="46" y="34" width="14" height="28" rx="4" fill="#00B8D4" />
 
-  <!-- Main hull (wide midsection) -->
-  <rect x="16" y="24" width="32" height="34" rx="6" fill="#00E5FF" />
+  <!-- Main hull (big, fills most of viewBox) -->
+  <rect x="14" y="12" width="36" height="48" rx="8" fill="#00E5FF" />
 
-  <!-- Upper hull (narrower, creates pointed nose illusion) -->
-  <rect x="22" y="16" width="20" height="18" rx="5" fill="#00E5FF" />
+  <!-- Nose highlight -->
+  <rect x="22" y="6" width="20" height="12" rx="5" fill="#80F0FF" opacity="0.45" />
 
-  <!-- Nose cone accent -->
-  <rect x="27" y="10" width="10" height="10" rx="3" fill="#80F0FF" opacity="0.5" />
+  <!-- Cockpit (large, centered high) -->
+  <circle cx="32" cy="26" r="8" fill="#FFFFFF" />
+  <circle cx="32" cy="26" r="3" fill="#00B8D4" />
 
-  <!-- Hull detail lines -->
-  <rect x="20" y="38" width="24" height="2.5" rx="1" fill="#00B8D4" opacity="0.4" />
-  <rect x="22" y="44" width="20" height="2" rx="1" fill="#00B8D4" opacity="0.3" />
+  <!-- Power core -->
+  <circle cx="32" cy="48" r="6" fill="#00B8D4" />
+  <circle cx="32" cy="48" r="2.5" fill="#FFFFFF" />
 
-  <!-- Cockpit (larger, more prominent) -->
-  <circle cx="32" cy="28" r="7" fill="#FFFFFF" />
-  <circle cx="32" cy="28" r="2.5" fill="#00B8D4" />
-
-  <!-- Power core (signature element, lower center) -->
-  <circle cx="32" cy="50" r="5" fill="#00B8D4" />
-  <circle cx="32" cy="50" r="2" fill="#FFFFFF" />
+  <!-- Engine glow -->
+  <circle cx="32" cy="64" r="5" fill="#00E5FF" opacity="0.4" />
 </svg>

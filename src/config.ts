@@ -8,8 +8,8 @@ export const GameConfig = Object.freeze({
 
   // Player (Spaceship)
   player: {
-    width: 50,
-    height: 50,
+    width: 56,
+    height: 70,
     color: '#00E5FF',
     x: 400,       // starting X (center)
     y: 500,       // bottom area

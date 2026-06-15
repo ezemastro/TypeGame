@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80" role="img">
+  <title>AstroType — Engine Cooling (Ship Overlay)</title>
+  <desc>Blue cooling glow at engines for Quick Cooling. Overlays on player ship. Static.</desc>
+
+  <!-- Cooling glow rings at engine (bottom of ship) -->
+  <circle cx="24" cy="66" r="6" fill="#448AFF" opacity="0.3" />
+  <circle cx="40" cy="66" r="6" fill="#448AFF" opacity="0.3" />
+  <circle cx="24" cy="66" r="3" fill="#FFFFFF" opacity="0.4" />
+  <circle cx="40" cy="66" r="3" fill="#FFFFFF" opacity="0.4" />
+</svg>

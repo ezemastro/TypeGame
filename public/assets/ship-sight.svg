@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80" role="img">
+  <title>AstroType — Targeting Sight (Ship Overlay)</title>
+  <desc>Purple targeting reticle glow for Sharp Sight. Overlays on player ship. Static.</desc>
+
+  <!-- Targeting reticle around cockpit -->
+  <circle cx="32" cy="26" r="14" fill="none" stroke="#B388FF" stroke-width="1.5" opacity="0.5" />
+  <circle cx="32" cy="26" r="10" fill="#B388FF" opacity="0.1" />
+
+  <!-- Corner ticks -->
+  <rect x="20" y="14" width="4" height="1.5" rx="0.5" fill="#B388FF" opacity="0.6" />
+  <rect x="20" y="36" width="4" height="1.5" rx="0.5" fill="#B388FF" opacity="0.6" />
+  <rect x="40" y="14" width="4" height="1.5" rx="0.5" fill="#B388FF" opacity="0.6" />
+  <rect x="40" y="36" width="4" height="1.5" rx="0.5" fill="#B388FF" opacity="0.6" />
+</svg>

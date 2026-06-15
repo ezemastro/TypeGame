@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80" role="img">
+  <title>AstroType — Explosive Charge (Ship Overlay)</title>
+  <desc>Red energy glow at front of ship for Explosive Impact. Overlays on player ship. Static.</desc>
+
+  <!-- Red energy ring at nose -->
+  <circle cx="32" cy="8" r="10" fill="#FF5252" opacity="0.25" />
+  <circle cx="32" cy="8" r="6" fill="none" stroke="#FF1744" stroke-width="2" />
+  <circle cx="32" cy="8" r="2" fill="#FF5252" />
+</svg>

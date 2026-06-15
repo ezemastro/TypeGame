@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80" role="img">
+  <title>AstroType — Dual Cannon (Ship Overlay)</title>
+  <desc>Second weapon barrel offset for Dual Shot. Overlays on player ship. Static.</desc>
+
+  <!-- Offset second barrel -->
+  <rect x="38" y="8" width="6" height="10" rx="2" fill="#00B8D4" />
+  <rect x="39.5" y="8" width="3" height="4" rx="1.5" fill="#FFFFFF" opacity="0.6" />
+</svg>
