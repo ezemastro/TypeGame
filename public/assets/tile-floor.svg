@@ -1,66 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
   <title>TypeBot — Floor Tile</title>
-  <desc>Green grass background with subtle scattered circles for a clean, flat, geometric look.</desc>
+  <desc>Clean dark ground with subtle terrain contour lines. No dots, no noise.</desc>
 
-  <!-- Grass background -->
-  <rect width="128" height="128" fill="#7CB342" />
+  <!-- Base ground -->
+  <rect width="128" height="128" fill="#3A4D1E" />
 
-  <!-- ============================================================
-       Interior dots — darker green (#558B2F) and lighter (#8BC34A)
-       r=2 to r=4, random scatter across the tile
-       ============================================================ -->
-  <circle cx="18" cy="22" r="3" fill="#558B2F" />
-  <circle cx="42" cy="16" r="2.5" fill="#8BC34A" />
-  <circle cx="66" cy="28" r="3.5" fill="#558B2F" />
-  <circle cx="90" cy="14" r="2" fill="#8BC34A" />
-  <circle cx="108" cy="40" r="3" fill="#558B2F" />
-  <circle cx="118" cy="62" r="2.5" fill="#8BC34A" />
-  <circle cx="104" cy="88" r="3" fill="#558B2F" />
-  <circle cx="80" cy="72" r="2" fill="#8BC34A" />
-  <circle cx="56" cy="58" r="3.5" fill="#558B2F" />
-  <circle cx="32" cy="44" r="2.5" fill="#8BC34A" />
-  <circle cx="24" cy="72" r="3" fill="#558B2F" />
-  <circle cx="50" cy="92" r="2" fill="#8BC34A" />
-  <circle cx="72" cy="106" r="3" fill="#558B2F" />
-  <circle cx="98" cy="110" r="2.5" fill="#8BC34A" />
-  <circle cx="86" cy="46" r="2" fill="#558B2F" />
-  <circle cx="62" cy="82" r="4" fill="#558B2F" />
-  <circle cx="34" cy="100" r="2" fill="#8BC34A" />
-  <circle cx="14" cy="106" r="3" fill="#558B2F" />
-  <circle cx="112" cy="52" r="2.5" fill="#8BC34A" />
-
-  <!-- ============================================================
-       Edge-continuity pairs — same circles mirrored at edge + 128
-       for seamless horizontal and vertical tiling
-       ============================================================ -->
-
-  <!-- Left/Right edge pairs -->
-  <circle cx="3" cy="18" r="2.5" fill="#558B2F" />
-  <circle cx="125" cy="18" r="2.5" fill="#558B2F" />
-  <circle cx="2" cy="52" r="3" fill="#8BC34A" />
-  <circle cx="126" cy="52" r="3" fill="#8BC34A" />
-  <circle cx="4" cy="78" r="2" fill="#558B2F" />
-  <circle cx="124" cy="78" r="2" fill="#558B2F" />
-  <circle cx="3" cy="98" r="3.5" fill="#8BC34A" />
-  <circle cx="125" cy="98" r="3.5" fill="#8BC34A" />
-  <circle cx="1" cy="116" r="2" fill="#558B2F" />
-  <circle cx="127" cy="116" r="2" fill="#558B2F" />
-
-  <!-- Top/Bottom edge pairs -->
-  <circle cx="24" cy="2" r="2" fill="#8BC34A" />
-  <circle cx="24" cy="126" r="2" fill="#8BC34A" />
-  <circle cx="50" cy="3" r="3" fill="#558B2F" />
-  <circle cx="50" cy="125" r="3" fill="#558B2F" />
-  <circle cx="76" cy="2" r="2.5" fill="#8BC34A" />
-  <circle cx="76" cy="126" r="2.5" fill="#8BC34A" />
-  <circle cx="100" cy="3" r="2" fill="#558B2F" />
-  <circle cx="100" cy="125" r="2" fill="#558B2F" />
-  <circle cx="116" cy="2" r="3" fill="#8BC34A" />
-  <circle cx="116" cy="126" r="3" fill="#8BC34A" />
-
-  <!-- Corner pairs (diagonal wrap) -->
-  <circle cx="2" cy="2" r="3" fill="#558B2F" />
-  <circle cx="126" cy="126" r="3" fill="#558B2F" />
-  <circle cx="126" cy="2" r="2" fill="#8BC34A" />
-  <circle cx="2" cy="126" r="2" fill="#8BC34A" />
+  <!-- Subtle terrain contour bands — very low opacity, seamless tiling -->
+  <rect y="0"   width="128" height="2" fill="#2D3E15" opacity="0.15" />
+  <rect y="24"  width="128" height="1.5" fill="#4A5D2E" opacity="0.12" />
+  <rect y="48"  width="128" height="2.5" fill="#2D3E15" opacity="0.14" />
+  <rect y="72"  width="128" height="1.5" fill="#4A5D2E" opacity="0.12" />
+  <rect y="96"  width="128" height="2" fill="#2D3E15" opacity="0.15" />
+  <!-- Vertical tiling pair for the top band -->
+  <rect y="120" width="128" height="2" fill="#2D3E15" opacity="0.15" />
 </svg>

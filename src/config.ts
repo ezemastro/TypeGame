@@ -3,7 +3,7 @@ export const GameConfig = Object.freeze({
   canvas: {
     width: 800,
     height: 600,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: '#2C3A14',
   },
 
   // Player (Robot)

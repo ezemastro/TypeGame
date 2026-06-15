@@ -28,9 +28,12 @@ interface ProjectileRender {
   targetId: number;
 }
 
+type ParallaxType = 'cloud' | 'ground';
+
 interface ParallaxItem {
   image: Phaser.GameObjects.Image;
   speed: number;
+  type: ParallaxType;
 }
 
 export class GameScene extends Phaser.Scene {
@@ -56,6 +59,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
+    // Reset time scales (may have been frozen by game over / pause)
+    this.time.timeScale = 1;
+    this.tweens.timeScale = 1;
+
     this.gameState = createInitialGameState();
     this.gameState.player = createPlayer();
     this.enemyRenderMap = new Map();
@@ -126,18 +133,42 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard!.on('keydown', this.keyHandler);
   }
 
+  /**
+   * Compute depth from screen Y so that closer-to-player items render above
+   * further-away ones. Clouds stay in [1.0, ~1.5], ground decor in [2.0, 4.0].
+   */
+  private depthFromY(y: number, type: ParallaxType): number {
+    if (type === 'cloud') {
+      // y range roughly -40..340; map to 1.0..1.5
+      return 1.0 + ((y + 40) / 380) * 0.5;
+    }
+    // Ground: y range -120..600; map to 2.0..4.0
+    return 2.0 + ((y + 120) / 720) * 2.0;
+  }
+
   private spawnParallaxItems(): void {
-    const textures = ['tree', 'rock', 'bush'];
-    for (let i = 0; i < 6; i++) {
+    // Ground elements — trees, rocks, bushes
+    // Place them in left/right thirds only, never in the center lane (player path)
+    const textures: Array<'tree' | 'rock' | 'bush'> = ['tree', 'rock', 'bush'];
+    const groundCount = 10;
+    const laneMargin = 140; // keep this far from center on each side
+    const centerX = GameConfig.canvas.width / 2;
+    const leftMax = centerX - laneMargin;
+    const rightMin = centerX + laneMargin;
+
+    for (let i = 0; i < groundCount; i++) {
       const texture = Phaser.Utils.Array.GetRandom(textures);
-      const item = this.add.image(
-        Phaser.Math.Between(40, GameConfig.canvas.width - 40),
-        Phaser.Math.Between(-100, GameConfig.canvas.height),
-        texture,
-      );
-      item.setDepth(1);
-      item.setScale(Phaser.Math.FloatBetween(0.7, 1.1));
-      this.parallaxItems.push({ image: item, speed: 1 });
+      // Randomly pick left-side or right-side placement
+      const x = Math.random() > 0.5
+        ? Phaser.Math.Between(20, leftMax)
+        : Phaser.Math.Between(rightMin, GameConfig.canvas.width - 20);
+      const y = Phaser.Math.Between(-120, GameConfig.canvas.height);
+      const item = this.add.image(x, y, texture);
+      item.setDepth(this.depthFromY(y, 'ground'));
+      item.setScale(Phaser.Math.FloatBetween(0.8, 1.2));
+
+      const speed = 1.0;
+      this.parallaxItems.push({ image: item, speed, type: 'ground' });
     }
   }
 
@@ -146,22 +177,10 @@ export class GameScene extends Phaser.Scene {
 
     const gs = this.gameState;
 
-    // Background scroll — scroll toward the player (world moves toward camera)
-    const scrollSpeed = GameConfig.world.scrollSpeed;
-    this.tileSprite.tilePositionY -= scrollSpeed * (delta / 1000);
-
-    // Parallax movement — trees/rocks/bushes move toward player (same direction as tile)
-    for (const item of this.parallaxItems) {
-      item.image.y += scrollSpeed * item.speed * (delta / 1000);
-      if (item.image.y > GameConfig.canvas.height + 60) {
-        item.image.y = -60;
-        item.image.x = Phaser.Math.Between(20, GameConfig.canvas.width - 20);
-      }
-    }
-
-    // If paused (level-up screen), skip all game systems but still render
+    // If paused (level-up screen), freeze all systems and animations
     if (gs.isPaused) {
       if (!this.levelUpScreen && gs.levelUpChoices.length > 0) {
+        this.tweens.timeScale = 0;
         this.levelUpScreen = showLevelUp(this, gs.levelUpChoices, (powerUpId: string) => {
           gs.activePowerUps.push(powerUpId);
           gs.levelUpChoices = [];
@@ -170,12 +189,40 @@ export class GameScene extends Phaser.Scene {
             this.levelUpScreen.destroy();
           }
           this.levelUpScreen = null;
+          this.tweens.timeScale = 1;
         });
       }
       this.syncAuraRendering();
       this.syncRendering();
       this.hud.update(gs);
       return;
+    }
+
+    // Background scroll — scroll toward the player (world moves toward camera)
+    const scrollSpeed = GameConfig.world.scrollSpeed;
+    this.tileSprite.tilePositionY -= scrollSpeed * (delta / 1000);
+
+    // Parallax movement — trees/rocks/bushes move toward player, clouds drift slowly
+    const groundLaneMargin = 140;
+    const groundCenterX = GameConfig.canvas.width / 2;
+    const groundLeftMax = groundCenterX - groundLaneMargin;
+    const groundRightMin = groundCenterX + groundLaneMargin;
+
+    for (const item of this.parallaxItems) {
+      item.image.y += scrollSpeed * item.speed * (delta / 1000);
+      if (item.image.y > GameConfig.canvas.height + 80) {
+        item.image.y = item.type === 'cloud' ? -40 : -80;
+        // Keep ground items off the center lane on wrap-around too
+        if (item.type === 'ground') {
+          item.image.x = Math.random() > 0.5
+            ? Phaser.Math.Between(20, groundLeftMax)
+            : Phaser.Math.Between(groundRightMin, GameConfig.canvas.width - 20);
+        } else {
+          item.image.x = Phaser.Math.Between(20, GameConfig.canvas.width - 20);
+        }
+      }
+      // Update depth dynamically: items closer to the player render on top
+      item.image.setDepth(this.depthFromY(item.image.y, item.type));
     }
 
     // Run systems
@@ -218,6 +265,7 @@ export class GameScene extends Phaser.Scene {
     gs.enemies = gs.enemies.filter((e) => e.alive);
 
     if (gs.gameOver) {
+      this.tweens.timeScale = 0;
       this.gameOverScreen = showGameOver(this, gs.score);
       return;
     }
@@ -405,7 +453,7 @@ export class GameScene extends Phaser.Scene {
         img.setDepth(5);
 
         // Dark background behind word text for readability
-        // Created BEFORE text so text renders on top (depth: bg=5, text=6)
+        // Created BEFORE text so text renders on top (depth: bg=6, text=7)
         const textBg = this.add.rectangle(
           enemy.x,
           enemy.y - enemy.height / 2 - 10,
@@ -415,7 +463,7 @@ export class GameScene extends Phaser.Scene {
           0.5,
         );
         textBg.setOrigin(0.5, 1); // same origin as text — bottom-aligned
-        textBg.setDepth(5);
+        textBg.setDepth(6);
 
         const text = this.add.text(
           enemy.x,
@@ -428,7 +476,7 @@ export class GameScene extends Phaser.Scene {
           },
         );
         text.setOrigin(0.5, 1); // center horizontally, bottom-aligned
-        text.setDepth(6);
+        text.setDepth(7);
 
         // Size background to match the measured text
         textBg.setSize(text.width + 8, 18);
@@ -520,7 +568,7 @@ export class GameScene extends Phaser.Scene {
           color,
           cfg.alpha,
         );
-        this.auraCircle.setDepth(2);
+        this.auraCircle.setDepth(3);
       } else {
         this.auraCircle.setPosition(
           gs.player.x + gs.player.width / 2,

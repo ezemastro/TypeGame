@@ -1,45 +1,19 @@
-<svg width="80" height="100" viewBox="0 0 80 100" xmlns="http://www.w3.org/2000/svg" role="img">
-  <title>TypeBot — Tree (Parallax Background)</title>
-  <desc>Stylized tree with layered green canopy and brown trunk. Subtle breeze sway animation for parallax depth.</desc>
+<svg width="80" height="110" viewBox="0 0 80 110" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>TypeBot — Pine Tree (Parallax Background)</title>
+  <desc>Clean geometric pine tree with layered triangular canopy and subtle ground shadow.</desc>
 
-  <style>
-    @media (prefers-reduced-motion: reduce) {
-      .tree {
-        animation: none !important;
-      }
-    }
+  <!-- Ground shadow -->
+  <ellipse cx="40" cy="106" rx="18" ry="4" fill="#1C280A" opacity="0.3" />
 
-    /*
-     * Subtle lateral oscillation (±2px) to simulate a light breeze.
-     */
-    .tree {
-      animation: breeze 3s ease-in-out infinite alternate;
-    }
+  <!-- Trunk -->
+  <rect x="34" y="56" width="12" height="50" rx="2" fill="#5D4037" />
 
-    @keyframes breeze {
-      from { transform: translateX(-2px); }
-      to   { transform: translateX(2px); }
-    }
-  </style>
+  <!-- Lower canopy — darker green base triangle -->
+  <polygon points="40,10 8,68 72,68" fill="#388E3C" />
 
-  <g class="tree">
-    <!-- Ground shadow -->
-    <ellipse cx="40" cy="88" rx="20" ry="6" fill="#000000" opacity="0.15" />
+  <!-- Upper canopy — lighter green highlight -->
+  <polygon points="40,4 16,52 64,52" fill="#4CAF50" opacity="0.8" />
 
-    <!-- Trunk -->
-    <rect x="33" y="45" width="14" height="45" rx="2" fill="#795548" />
-
-    <!-- Canopy layers (back to front) -->
-    <!-- Bottom layer — largest, darkest -->
-    <circle cx="40" cy="40" r="28" fill="#66BB6A" />
-
-    <!-- Mid-left layer -->
-    <circle cx="28" cy="32" r="24" fill="#81C784" />
-
-    <!-- Mid-right layer -->
-    <circle cx="52" cy="35" r="22" fill="#4CAF50" />
-
-    <!-- Top layer -->
-    <circle cx="40" cy="22" r="18" fill="#81C784" />
-  </g>
+  <!-- Right-side depth shadow -->
+  <polygon points="40,10 56,68 72,68" fill="#2E7D32" opacity="0.35" />
 </svg>
