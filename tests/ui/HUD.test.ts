@@ -4,8 +4,8 @@ import { GameConfig } from '../../src/config';
 describe('HUD', () => {
   it('should format score text correctly', () => {
     const score = 150;
-    const text = `Score: ${score}`;
-    expect(text).toBe('Score: 150');
+    const text = `SCORE ${score}`;
+    expect(text).toBe('SCORE 150');
   });
 
   it('should use config colors for heat bar segments', () => {
@@ -59,13 +59,13 @@ describe('HUD', () => {
 
   it('should format level text correctly', () => {
     const level = 3;
-    const text = `Lv. ${level}`;
-    expect(text).toBe('Lv. 3');
+    const text = `LV.${level}`;
+    expect(text).toBe('LV.3');
   });
 
   it('should show level 1 at game start', () => {
     const level = 1;
-    const text = `Lv. ${level}`;
-    expect(text).toBe('Lv. 1');
+    const text = `LV.${level}`;
+    expect(text).toBe('LV.1');
   });
 });

@@ -7,30 +7,33 @@ export interface HUD {
 }
 
 export function createHUD(scene: Phaser.Scene): HUD {
-  const scoreText = scene.add.text(10, 10, 'Score: 0', {
-    fontFamily: GameConfig.wordDisplay.fontFamily,
-    fontSize: '20px',
-    color: GameConfig.wordDisplay.color,
+  const font = GameConfig.hud.fontFamily;
+
+  // Score — top-left, cyan glow
+  const scoreText = scene.add.text(14, 14, 'SCORE 0', {
+    fontFamily: font,
+    fontSize: '18px',
+    color: '#00E5FF',
   });
   scoreText.setDepth(100);
 
-  // Level text (left of heat bar)
-  const levelText = scene.add.text(10, GameConfig.canvas.height - 52, 'Lv. 1', {
-    fontFamily: GameConfig.wordDisplay.fontFamily,
-    fontSize: '16px',
-    color: '#ffdd00',
+  // Level text — bottom-left, gold
+  const levelText = scene.add.text(14, GameConfig.canvas.height - 52, 'LV.1', {
+    fontFamily: font,
+    fontSize: '14px',
+    color: '#FFD740',
   });
   levelText.setDepth(100);
 
-  // XP bar (top of screen, thin)
+  // XP bar — thin line across top, cyan fill on dark bg
   const xpBarWidth = GameConfig.canvas.width;
-  const xpBarHeight = 6;
+  const xpBarHeight = 4;
   const xpBarBg = scene.add.rectangle(
     xpBarWidth / 2,
     xpBarHeight / 2,
     xpBarWidth,
     xpBarHeight,
-    0x333333,
+    0x1E1E3F,
   );
   xpBarBg.setDepth(100);
 
@@ -39,7 +42,7 @@ export function createHUD(scene: Phaser.Scene): HUD {
     xpBarHeight / 2,
     0,
     xpBarHeight,
-    0xffdd00,
+    0x00E5FF,
   );
   xpBarFill.setOrigin(0, 0.5);
   xpBarFill.setDepth(101);
@@ -49,20 +52,21 @@ export function createHUD(scene: Phaser.Scene): HUD {
   const segWidth = 20;
   const segHeight = 16;
   const segGap = 4;
-  const dimColor = 0x333333;
+  const dimColor = 0x1E1E3F;
 
   for (let i = 0; i < GameConfig.heatBar.maxSegments; i++) {
     const x = GameConfig.canvas.width - 10 - (i + 1) * (segWidth + segGap);
     const rect = scene.add.rectangle(x, heatBarY, segWidth, segHeight, dimColor);
     rect.setOrigin(0.5, 0.5);
+    rect.setStrokeStyle(1, 0x00E5FF, 0.3);
     rect.setDepth(100);
     heatRects.push(rect);
   }
 
   return {
     update(state: GameState): void {
-      scoreText.setText(`Score: ${state.score}`);
-      levelText.setText(`Lv. ${state.level}`);
+      scoreText.setText(`SCORE ${state.score}`);
+      levelText.setText(`LV.${state.level}`);
 
       // Update XP bar width based on progress
       const progress = state.xpToNextLevel > 0

@@ -41,6 +41,11 @@ export const GameConfig = Object.freeze({
     color: '#ffffff',
   },
 
+  // HUD typography
+  hud: {
+    fontFamily: '"Orbitron", monospace',
+  },
+
   // Shooting / Combat
   shooting: {
     cooldown: 200,       // ms between shots
