@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "svg-animations": {
+      "source": "supermemoryai/skills",
+      "sourceType": "github",
+      "skillPath": "svg-animations/SKILL.md",
+      "computedHash": "9be4b3e0afe9d3cbb1bcf238f8504f9a23552f742350fbef9483070112ac1977"
+    },
+    "svg-art": {
+      "source": "kv0906/cc-skills",
+      "sourceType": "github",
+      "skillPath": "svg-art-skill/SKILL.md",
+      "computedHash": "356a500cf848e1229758271608f3956773cf89afb5bc367fc559b204f4d53640"
+    },
+    "svg-illustrations": {
+      "source": "fawzymohamed/devops",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/svg-illustrations/SKILL.md",
+      "computedHash": "b727c2864cbc3dada944a9ead2755927f39fe74da0a2c62b3aae3b35c20e3ff3"
+    }
+  }
+}

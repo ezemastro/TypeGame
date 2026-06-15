@@ -1,0 +1,129 @@
+<svg viewBox="0 0 56 48" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Enemy Bug</title>
+  <desc>Top-down view of a warm orange enemy bug with animated legs, fluttering wings, and searching antennae.</desc>
+
+  <defs>
+    <style>
+      /* =============================================
+         Reduce motion for accessibility
+         ============================================= */
+      @media (prefers-reduced-motion: reduce) {
+        .leg,
+        .wing,
+        .antenna {
+          animation: none !important;
+        }
+      }
+
+      /* =============================================
+         1. Legs — wave motion, staggered delays
+         ============================================= */
+      .leg {
+        animation: leg-wave 0.3s ease-in-out infinite alternate;
+      }
+      .leg-L1 { transform-origin: 12px 22px; animation-delay: 0s; }
+      .leg-L2 { transform-origin: 12px 28px; animation-delay: 0.1s; }
+      .leg-L3 { transform-origin: 12px 34px; animation-delay: 0.2s; }
+      .leg-R1 { transform-origin: 44px 22px; animation-delay: 0s; }
+      .leg-R2 { transform-origin: 44px 28px; animation-delay: 0.1s; }
+      .leg-R3 { transform-origin: 44px 34px; animation-delay: 0.2s; }
+
+      @keyframes leg-wave {
+        from { transform: rotate(-8deg); }
+        to   { transform: rotate(8deg); }
+      }
+
+      /* =============================================
+         2. Wings — rapid flutter (scaleY)
+         ============================================= */
+      .wing {
+        animation: flutter 0.15s ease-in-out infinite;
+      }
+      .wing-L { transform-origin: 22px 24px; }
+      .wing-R { transform-origin: 34px 24px; }
+
+      @keyframes flutter {
+        0%, 100% { transform: scaleY(1); }
+        50%      { transform: scaleY(0.7); }
+      }
+
+      /* =============================================
+         3. Antennae — slow searching sway
+         ============================================= */
+      .antenna {
+        animation: search 1.2s ease-in-out infinite alternate;
+      }
+      .antenna-L { transform-origin: 23px 16px; }
+      .antenna-R { transform-origin: 33px 16px; }
+
+      @keyframes search {
+        from { transform: rotate(-5deg); }
+        to   { transform: rotate(5deg); }
+      }
+    </style>
+  </defs>
+
+  <!-- ===== Legs (behind body) ===== -->
+  <!-- Left legs -->
+  <g class="leg leg-L1">
+    <line x1="12" y1="22" x2="4" y2="28" stroke="#E64A19" stroke-width="2" stroke-linecap="round" />
+    <circle cx="8" cy="25" r="1.5" fill="#E64A19" />
+  </g>
+  <g class="leg leg-L2">
+    <line x1="12" y1="28" x2="4" y2="32" stroke="#E64A19" stroke-width="2" stroke-linecap="round" />
+    <circle cx="8" cy="30" r="1.5" fill="#E64A19" />
+  </g>
+  <g class="leg leg-L3">
+    <line x1="12" y1="34" x2="4" y2="38" stroke="#E64A19" stroke-width="2" stroke-linecap="round" />
+    <circle cx="8" cy="36" r="1.5" fill="#E64A19" />
+  </g>
+
+  <!-- Right legs -->
+  <g class="leg leg-R1">
+    <line x1="44" y1="22" x2="52" y2="28" stroke="#E64A19" stroke-width="2" stroke-linecap="round" />
+    <circle cx="48" cy="25" r="1.5" fill="#E64A19" />
+  </g>
+  <g class="leg leg-R2">
+    <line x1="44" y1="28" x2="52" y2="32" stroke="#E64A19" stroke-width="2" stroke-linecap="round" />
+    <circle cx="48" cy="30" r="1.5" fill="#E64A19" />
+  </g>
+  <g class="leg leg-R3">
+    <line x1="44" y1="34" x2="52" y2="38" stroke="#E64A19" stroke-width="2" stroke-linecap="round" />
+    <circle cx="48" cy="36" r="1.5" fill="#E64A19" />
+  </g>
+
+  <!-- ===== Body ===== -->
+  <ellipse cx="28" cy="28" rx="20" ry="14" fill="#FF7043" />
+
+  <!-- ===== Wings (translucent, over body) ===== -->
+  <g class="wing wing-L">
+    <ellipse cx="16" cy="24" rx="8" ry="12" fill="#FFAB91" opacity="0.3" />
+  </g>
+  <g class="wing wing-R">
+    <ellipse cx="40" cy="24" rx="8" ry="12" fill="#FFAB91" opacity="0.3" />
+  </g>
+
+  <!-- ===== Spots on body ===== -->
+  <circle cx="22" cy="30" r="2.5" fill="#E64A19" opacity="0.7" />
+  <circle cx="34" cy="26" r="2"   fill="#E64A19" opacity="0.7" />
+  <circle cx="30" cy="34" r="2"   fill="#E64A19" opacity="0.7" />
+
+  <!-- ===== Eyes ===== -->
+  <!-- Left eye -->
+  <circle cx="23" cy="18" r="6" fill="#FFFFFF" />
+  <circle cx="23" cy="18" r="2.5" fill="#263238" />
+
+  <!-- Right eye -->
+  <circle cx="33" cy="18" r="6" fill="#FFFFFF" />
+  <circle cx="33" cy="18" r="2.5" fill="#263238" />
+
+  <!-- ===== Antennae (above eyes) ===== -->
+  <g class="antenna antenna-L">
+    <path d="M 23 16 Q 14 6 10 4" fill="none" stroke="#E64A19" stroke-width="2" stroke-linecap="round" />
+    <circle cx="10" cy="4" r="2" fill="#E64A19" />
+  </g>
+  <g class="antenna antenna-R">
+    <path d="M 33 16 Q 42 6 46 4" fill="none" stroke="#E64A19" stroke-width="2" stroke-linecap="round" />
+    <circle cx="46" cy="4" r="2" fill="#E64A19" />
+  </g>
+</svg>

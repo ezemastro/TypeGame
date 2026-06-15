@@ -1,0 +1,163 @@
+<svg viewBox="0 0 64 80" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>TypeBot — Player Robot</title>
+  <desc>Friendly geometric robot character for the TypeBot typing game, viewed from 3/4 top-down angle, facing upward.</desc>
+
+  <defs>
+    <!-- Subtle radial gradient for head volume -->
+    <radialGradient id="headGradient" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#69F0AE" />
+      <stop offset="100%" stop-color="#00E676" />
+    </radialGradient>
+  </defs>
+
+  <style>
+    /* =============================================
+       Reduce motion for accessibility
+       ============================================= */
+    @media (prefers-reduced-motion: reduce) {
+      .robot,
+      .leg-left,
+      .leg-right,
+      .arm-left,
+      .arm-right,
+      .antenna,
+      .eye,
+      .chest-indicator {
+        animation: none !important;
+      }
+    }
+
+    /* =============================================
+       1. Bounce — whole robot bobs up/down
+       ============================================= */
+    .robot {
+      animation: bounce 0.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(-2px); }
+      to   { transform: translateY(2px); }
+    }
+
+    /* =============================================
+       2. Walk — legs and arms swing in opposition
+       ============================================= */
+    .leg-left,
+    .arm-right {
+      animation: walk-forward 0.5s ease-in-out infinite alternate;
+    }
+
+    .leg-right,
+    .arm-left {
+      animation: walk-back 0.5s ease-in-out infinite alternate;
+    }
+
+    .leg-left  { transform-origin: 25px 64px; }
+    .leg-right { transform-origin: 39px 64px; }
+    .arm-left  { transform-origin: 12px 36px; }
+    .arm-right { transform-origin: 52px 36px; }
+
+    @keyframes walk-forward {
+      from { transform: rotate(-12deg); }
+      to   { transform: rotate(12deg); }
+    }
+
+    @keyframes walk-back {
+      from { transform: rotate(12deg); }
+      to   { transform: rotate(-12deg); }
+    }
+
+    /* =============================================
+       3. Blink — eyes close briefly every 3s
+       ============================================= */
+    .eye {
+      animation: blink 3s ease infinite;
+    }
+
+    @keyframes blink {
+      0%, 90%  { opacity: 1; }
+      95%, 100% { opacity: 0; }
+    }
+
+    /* =============================================
+       4. Antenna sway — gentle ±5° wobble
+       ============================================= */
+    .antenna {
+      animation: sway 1s ease-in-out infinite alternate;
+      transform-origin: 32px 12px;
+    }
+
+    @keyframes sway {
+      from { transform: rotate(-5deg); }
+      to   { transform: rotate(5deg); }
+    }
+
+    /* =============================================
+       5. Chest indicator pulse — scale 1→1.2→1
+       ============================================= */
+    .chest-indicator {
+      animation: pulse 1.5s ease-in-out infinite;
+      transform-origin: 32px 50px;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.2); }
+    }
+  </style>
+
+  <!-- ===== Bounce wrapper ===== -->
+  <g class="robot">
+
+    <!-- Left leg (behind body) -->
+    <g class="leg-left">
+      <rect x="20" y="64" width="10" height="16" rx="4" fill="#00E676" />
+    </g>
+
+    <!-- Right leg (behind body) -->
+    <g class="leg-right">
+      <rect x="34" y="64" width="10" height="16" rx="4" fill="#00E676" />
+    </g>
+
+    <!-- Left arm (behind body) -->
+    <g class="arm-left">
+      <rect x="8" y="36" width="8" height="18" rx="3" fill="#00E676" />
+    </g>
+
+    <!-- Right arm (behind body) -->
+    <g class="arm-right">
+      <rect x="48" y="36" width="8" height="18" rx="3" fill="#00E676" />
+    </g>
+
+    <!-- Body -->
+    <rect x="16" y="30" width="32" height="40" rx="8" fill="#00E676" />
+
+    <!-- Chest indicator light -->
+    <circle class="chest-indicator" cx="32" cy="50" r="5" fill="#00E5FF" />
+
+    <!-- Head -->
+    <circle cx="32" cy="28" r="16" fill="url(#headGradient)" />
+
+    <!-- Antenna -->
+    <g class="antenna">
+      <line x1="32" y1="12" x2="32" y2="0" stroke="#00E676" stroke-width="2" stroke-linecap="round" />
+      <circle cx="32" cy="0" r="3" fill="#00E676" />
+    </g>
+
+    <!-- Left eye -->
+    <g class="eye">
+      <circle cx="26" cy="26" r="4.5" fill="#FFFFFF" />
+      <circle cx="26" cy="26" r="2" fill="#263238" />
+    </g>
+
+    <!-- Right eye -->
+    <g class="eye">
+      <circle cx="38" cy="26" r="4.5" fill="#FFFFFF" />
+      <circle cx="38" cy="26" r="2" fill="#263238" />
+    </g>
+
+    <!-- Mouth — subtle smile curve -->
+    <path d="M 29 32 Q 32 35 35 32" fill="none" stroke="#263238" stroke-width="1.5" stroke-linecap="round" />
+
+  </g>
+</svg>
