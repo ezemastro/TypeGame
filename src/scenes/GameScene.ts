@@ -87,7 +87,7 @@ export class GameScene extends Phaser.Scene {
 
     // Player image
     const p = this.gameState.player;
-    this.playerImage = this.add.image(p.x, p.y, 'robot');
+    this.playerImage = this.add.image(p.x, p.y, 'player-ship');
     const playerScale = p.width / this.playerImage.width;
     this.playerImage.setScale(playerScale);
     this.playerImage.setDepth(10);
@@ -446,7 +446,7 @@ export class GameScene extends Phaser.Scene {
 
       let render = this.enemyRenderMap.get(enemy.id);
       if (!render) {
-        const textureKey = Math.random() > 0.5 ? 'enemy-robot' : 'enemy-bug';
+        const textureKey = Math.random() > 0.5 ? 'enemy-fighter' : 'enemy-scout';
         const img = this.add.image(enemy.x, enemy.y, textureKey);
         const enemyScale = enemy.width / img.width;
         img.setScale(enemyScale);
@@ -485,7 +485,7 @@ export class GameScene extends Phaser.Scene {
         this.enemyRenderMap.set(enemy.id, render);
 
         // Texture-specific tween animations (CSS animations lost in Canvas2D)
-        if (textureKey === 'enemy-bug') {
+        if (textureKey === 'enemy-scout') {
           // Wing flutter: quick scale oscillation on Y axis
           this.tweens.add({
             targets: img,

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80" role="img">
+  <title>AstroType — Player Spaceship</title>
+  <desc>Top-down view of cyan spaceship facing up. Geometric construction with power core signature. Static for Phaser.CANVAS.</desc>
+
+  <!-- Ground shadow -->
+  <ellipse cx="32" cy="74" rx="18" ry="3.5" fill="#000000" opacity="0.15" />
+
+  <!-- Engine glow (rear) -->
+  <circle cx="32" cy="58" r="6" fill="#00E5FF" opacity="0.5" />
+
+  <!-- Left wing -->
+  <rect x="6" y="36" width="12" height="22" rx="3" fill="#00B8D4" />
+
+  <!-- Right wing -->
+  <rect x="46" y="36" width="12" height="22" rx="3" fill="#00B8D4" />
+
+  <!-- Main hull -->
+  <rect x="16" y="18" width="32" height="42" rx="6" fill="#00E5FF" />
+
+  <!-- Hull panel lines -->
+  <rect x="20" y="32" width="24" height="3" rx="1.5" fill="#00B8D4" opacity="0.4" />
+  <rect x="20" y="36" width="24" height="3" rx="1.5" fill="#00B8D4" opacity="0.4" />
+
+  <!-- Cockpit window (top of ship, facing up) -->
+  <circle cx="32" cy="22" r="6" fill="#FFFFFF" />
+
+  <!-- Cockpit pupil -->
+  <circle cx="32" cy="22" r="2" fill="#00B8D4" />
+
+  <!-- Power core (signature element) -->
+  <circle cx="32" cy="44" r="5" fill="#00B8D4" />
+  <circle cx="32" cy="44" r="2" fill="#FFFFFF" />
+</svg>

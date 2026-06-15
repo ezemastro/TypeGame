@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="56" height="48" viewBox="0 0 56 48" role="img">
+  <title>AstroType — Enemy Scout</title>
+  <desc>Top-down view of magenta alien scout ship with wing-like appendages. Oval body distinct from fighter. Static for Phaser.CANVAS.</desc>
+
+  <!-- Ground shadow -->
+  <ellipse cx="28" cy="44" rx="18" ry="3" fill="#000000" opacity="0.15" />
+
+  <!-- Left wing -->
+  <ellipse cx="10" cy="28" rx="8" ry="18" fill="#AA00FF" opacity="0.35" />
+
+  <!-- Right wing -->
+  <ellipse cx="46" cy="28" rx="8" ry="18" fill="#AA00FF" opacity="0.35" />
+
+  <!-- Main body (oval, organic) -->
+  <ellipse cx="28" cy="28" rx="18" ry="15" fill="#E040FB" />
+
+  <!-- Left eye (facing down toward player) -->
+  <circle cx="21" cy="20" r="5" fill="#FFFFFF" />
+  <circle cx="21" cy="20" r="2" fill="#AA00FF" />
+
+  <!-- Right eye -->
+  <circle cx="35" cy="20" r="5" fill="#FFFFFF" />
+  <circle cx="35" cy="20" r="2" fill="#AA00FF" />
+
+  <!-- Wing accent dots -->
+  <circle cx="12" cy="24" r="2" fill="#AA00FF" opacity="0.5" />
+  <circle cx="44" cy="24" r="2" fill="#AA00FF" opacity="0.5" />
+</svg>

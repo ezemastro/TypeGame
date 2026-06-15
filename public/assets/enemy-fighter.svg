@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" role="img">
+  <title>AstroType — Enemy Fighter</title>
+  <desc>Top-down view of crimson enemy fighter facing down. Wider and more angular than player ship. Static for Phaser.CANVAS.</desc>
+
+  <!-- Ground shadow -->
+  <ellipse cx="24" cy="44" rx="14" ry="3" fill="#000000" opacity="0.15" />
+
+  <!-- Left claw / wing extension -->
+  <rect x="2" y="26" width="8" height="16" rx="2" fill="#D32F2F" />
+
+  <!-- Right claw / wing extension -->
+  <rect x="38" y="26" width="8" height="16" rx="2" fill="#D32F2F" />
+
+  <!-- Main body (wider than player, squat) -->
+  <rect x="4" y="8" width="40" height="32" rx="5" fill="#FF5252" />
+
+  <!-- Left eye (facing down toward player) -->
+  <circle cx="16" cy="18" r="4.5" fill="#FFFFFF" />
+  <circle cx="16" cy="19" r="1.5" fill="#D32F2F" />
+
+  <!-- Right eye -->
+  <circle cx="32" cy="18" r="4.5" fill="#FFFFFF" />
+  <circle cx="32" cy="19" r="1.5" fill="#D32F2F" />
+
+  <!-- Power core (signature element) -->
+  <circle cx="24" cy="30" r="4" fill="#D32F2F" />
+  <circle cx="24" cy="30" r="1.5" fill="#FFFFFF" />
+</svg>

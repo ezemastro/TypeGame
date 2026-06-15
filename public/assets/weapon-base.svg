@@ -1,75 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" viewBox="0 0 80 40" role="img">
-  <title>TypeBot Weapon Base</title>
-  <desc>Base energy weapon for TypeBot game</desc>
-
-  <defs>
-    <linearGradient id="barrel-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#90A4AE" />
-      <stop offset="50%" stop-color="#78909C" />
-      <stop offset="100%" stop-color="#607D8B" />
-    </linearGradient>
-    <linearGradient id="grip-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#607D8B" />
-      <stop offset="100%" stop-color="#455A64" />
-    </linearGradient>
-    <radialGradient id="muzzle-glow-grad" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#00E676" stop-opacity="0.9" />
-      <stop offset="40%" stop-color="#00E676" stop-opacity="0.5" />
-      <stop offset="100%" stop-color="#00E676" stop-opacity="0" />
-    </radialGradient>
-  </defs>
+  <title>AstroType — Ship Cannon HUD</title>
+  <desc>Spaceship energy cannon displayed in HUD top-right. Cyan muzzle glow with metallic barrel. Static for Phaser.CANVAS.</desc>
 
   <!-- Grip / handle (rear vertical piece) -->
-  <rect x="4" y="12" width="10" height="16" rx="2" fill="url(#grip-gradient)" />
+  <rect x="4" y="12" width="10" height="16" rx="2" fill="#607D8B" />
 
-  <!-- Main barrel body (rounded horizontal rectangle) -->
-  <rect class="barrel-body" x="14" y="13" width="56" height="14" rx="4" fill="url(#barrel-gradient)" />
+  <!-- Main barrel body -->
+  <rect x="14" y="13" width="56" height="14" rx="4" fill="#78909C" />
 
-  <!-- Barrel segment lines (transverse details) -->
-  <line x1="32" y1="16" x2="32" y2="24" stroke="#90A4AE" stroke-width="1.5" stroke-linecap="round" />
-  <line x1="52" y1="16" x2="52" y2="24" stroke="#90A4AE" stroke-width="1.5" stroke-linecap="round" />
+  <!-- Barrel detail lines -->
+  <rect x="28" y="16" width="1.5" height="8" rx="0.75" fill="#90A4AE" opacity="0.5" />
+  <rect x="44" y="16" width="1.5" height="8" rx="0.75" fill="#90A4AE" opacity="0.5" />
 
-  <!-- Barrel ridge line (longitudinal) -->
-  <line x1="18" y1="17" x2="68" y2="17" stroke="#90A4AE" stroke-width="1" stroke-linecap="round" opacity="0.5" />
-  <line x1="18" y1="23" x2="68" y2="23" stroke="#546E7A" stroke-width="1" stroke-linecap="round" opacity="0.4" />
-
-  <!-- Muzzle glow (idle pulse) -->
-  <circle class="muzzle-glow" cx="70" cy="20" r="9" fill="url(#muzzle-glow-grad)" />
+  <!-- Muzzle glow (soft outer ring) -->
+  <circle cx="70" cy="20" r="8" fill="#00E5FF" opacity="0.2" />
 
   <!-- Muzzle nozzle ring -->
-  <circle cx="70" cy="20" r="5" fill="#1a1a2e" stroke="#00E676" stroke-width="1.5" />
+  <circle cx="70" cy="20" r="4.5" fill="none" stroke="#00E5FF" stroke-width="1.5" />
 
   <!-- Muzzle core -->
-  <circle cx="70" cy="20" r="2.5" fill="#00E676" opacity="0.9" />
+  <circle cx="70" cy="20" r="2" fill="#FFFFFF" />
 
   <!-- Indicator light (top, near muzzle) -->
-  <circle cx="56" cy="8" r="2" fill="#00E676" />
-  <circle cx="56" cy="8" r="4" fill="#00E676" opacity="0.15" />
-
-  <!-- Muzzle flash (hidden, activates on fire) -->
-  <circle class="muzzle-flash" cx="76" cy="20" r="10" fill="#FFFFFF" />
-
-  <style>
-    /* Idle muzzle breathing glow */
-    .muzzle-glow {
-      animation: muzzleBreathe 2s ease-in-out infinite;
-    }
-    @keyframes muzzleBreathe {
-      0%, 100% { opacity: 0.35; r: 9; }
-      50%       { opacity: 0.7;  r: 11; }
-    }
-
-    /* Muzzle flash — hidden by default, shown on fire */
-    .muzzle-flash {
-      opacity: 0;
-      transition: opacity 0.06s ease-out;
-    }
-    .muzzle-flash.fire {
-      opacity: 0.85;
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .muzzle-glow { animation: none !important; }
-    }
-  </style>
+  <circle cx="56" cy="8" r="2" fill="#00E5FF" />
+  <circle cx="56" cy="8" r="4" fill="#00E5FF" opacity="0.15" />
 </svg>
