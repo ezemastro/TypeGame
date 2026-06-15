@@ -15,7 +15,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image('weapon-base', 'assets/weapon-base.svg');
     this.load.image('bullet', 'assets/bullet.svg');
     this.load.image('tree', 'assets/tree.svg');
-    this.load.image('cloud', 'assets/cloud.svg');
+    this.load.image('rock', 'assets/rock.svg');
+    this.load.image('bush', 'assets/bush.svg');
   }
 
   create(): void {

@@ -1,0 +1,13 @@
+<svg width="56" height="40" viewBox="0 0 56 40" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>TypeBot — Bush (Parallax Background)</title>
+  <desc>Stylized bush with three overlapping green circles. Matches tree canopy style for parallax depth.</desc>
+
+  <!-- Bottom layer — largest, darkest -->
+  <circle cx="28" cy="24" r="16" fill="#66BB6A" />
+
+  <!-- Left highlight -->
+  <circle cx="18" cy="18" r="12" fill="#81C784" />
+
+  <!-- Right mid-tone -->
+  <circle cx="38" cy="18" r="13" fill="#4CAF50" />
+</svg>

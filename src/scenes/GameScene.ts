@@ -74,14 +74,14 @@ export class GameScene extends Phaser.Scene {
     );
     this.tileSprite.setDepth(0);
 
-    // Parallax trees
+    // Parallax environment (trees, rocks, bushes)
     this.spawnParallaxItems();
-    this.spawnParallaxClouds();
 
     // Player image
     const p = this.gameState.player;
     this.playerImage = this.add.image(p.x, p.y, 'robot');
-    this.playerImage.setDisplaySize(p.width, p.height);
+    const playerScale = p.width / this.playerImage.width;
+    this.playerImage.setScale(playerScale);
     this.playerImage.setDepth(10);
 
     // Player continuous bounce tween (CSS animations lost in Canvas2D)
@@ -126,29 +126,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnParallaxItems(): void {
-    for (let i = 0; i < 4; i++) {
-      const tree = this.add.image(
+    const textures = ['tree', 'rock', 'bush'];
+    for (let i = 0; i < 6; i++) {
+      const texture = Phaser.Utils.Array.GetRandom(textures);
+      const item = this.add.image(
         Phaser.Math.Between(40, GameConfig.canvas.width - 40),
         Phaser.Math.Between(-100, GameConfig.canvas.height),
-        'tree',
+        texture,
       );
-      tree.setDepth(1);
-      tree.setScale(Phaser.Math.FloatBetween(0.5, 0.8));
-      this.parallaxItems.push({ image: tree, speed: 1 });
-    }
-  }
-
-  private spawnParallaxClouds(): void {
-    for (let i = 0; i < 3; i++) {
-      const cloud = this.add.image(
-        Phaser.Math.Between(30, GameConfig.canvas.width - 30),
-        Phaser.Math.Between(-80, GameConfig.canvas.height / 2),
-        'cloud',
-      );
-      cloud.setDepth(0);
-      cloud.setAlpha(0.5);
-      cloud.setScale(Phaser.Math.FloatBetween(0.4, 0.7));
-      this.parallaxItems.push({ image: cloud, speed: 0.3 });
+      item.setDepth(1);
+      item.setScale(Phaser.Math.FloatBetween(0.5, 0.8));
+      this.parallaxItems.push({ image: item, speed: 1 });
     }
   }
 
@@ -161,7 +149,7 @@ export class GameScene extends Phaser.Scene {
     const scrollSpeed = GameConfig.world.scrollSpeed;
     this.tileSprite.tilePositionY -= scrollSpeed * (delta / 1000);
 
-    // Parallax movement — trees/clouds move toward player (same direction as tile)
+    // Parallax movement — trees/rocks/bushes move toward player (same direction as tile)
     for (const item of this.parallaxItems) {
       item.image.y += scrollSpeed * item.speed * (delta / 1000);
       if (item.image.y > GameConfig.canvas.height + 60) {
@@ -377,7 +365,8 @@ export class GameScene extends Phaser.Scene {
       if (!render) {
         const textureKey = Math.random() > 0.5 ? 'enemy-robot' : 'enemy-bug';
         const img = this.add.image(enemy.x, enemy.y, textureKey);
-        img.setDisplaySize(enemy.width, enemy.height);
+        const enemyScale = enemy.width / img.width;
+        img.setScale(enemyScale);
         img.setDepth(5);
 
         // Dark background behind word text for readability
@@ -385,11 +374,12 @@ export class GameScene extends Phaser.Scene {
         const textBg = this.add.rectangle(
           enemy.x,
           enemy.y - enemy.height / 2 - 10,
-          0,  // initial width — resized after text is measured
+          0,
           18,
           0x000000,
           0.5,
         );
+        textBg.setOrigin(0.5, 1); // same origin as text — bottom-aligned
         textBg.setDepth(5);
 
         const text = this.add.text(
