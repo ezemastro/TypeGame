@@ -12,6 +12,7 @@ import { difficultySystem } from '../../src/systems/DifficultySystem';
 import { scoreSystem } from '../../src/systems/ScoreSystem';
 import { xpSystem } from '../../src/systems/XPSystem';
 import { collisionSystem } from '../../src/systems/CollisionSystem';
+import { createEnemy } from '../../src/entities/Enemy';
 
 describe('GameScene orchestration (unit)', () => {
   it('should initialize GameState with player at config position', () => {
@@ -100,6 +101,7 @@ describe('GameScene orchestration (unit)', () => {
     // Simulate a key pushed during a frame
     state.pendingKeys.push('S');
     state.targetedEnemyId = 99;
+    state.secondaryTargetId = 42;
 
     // Process pending keys (as GameScene.update now does)
     while (state.pendingKeys.length > 0) {
@@ -109,10 +111,12 @@ describe('GameScene orchestration (unit)', () => {
     }
     state.lastKeyPressed = null;
     state.targetedEnemyId = null;
+    state.secondaryTargetId = null;
 
     expect(state.pendingKeys).toHaveLength(0);
     expect(state.lastKeyPressed).toBeNull();
     expect(state.targetedEnemyId).toBeNull();
+    expect(state.secondaryTargetId).toBeNull();
   });
 
   it('should run XPSystem before ScoreSystem so both see gearDropped', () => {
@@ -166,5 +170,43 @@ describe('GameScene orchestration (unit)', () => {
     }
 
     expect(state.enemies).toHaveLength(0); // no enemies spawned
+  });
+
+  it('should set secondaryTargetId when DUAL_SHOT finds a secondary target', () => {
+    const state = createInitialGameState();
+    state.player = createPlayer();
+    state.activePowerUps = ['DUAL_SHOT'];
+
+    // Spawn two enemies with same starting letter
+    spawnSystem(state, 0);
+    // Manually add a second enemy
+    const e1 = state.enemies[0];
+    if (e1) {
+      e1.word = 'SOL';
+      e1.fullWord = 'SOL';
+      e1.x = 200;
+      e1.y = 300;
+    }
+    const e2 = createEnemy('SAL', 100);
+    e2.x = 400;
+    e2.y = 300;
+    state.enemies.push(e2);
+
+    // Target the first enemy
+    state.targetedEnemyId = 1;
+    state.lastKeyPressed = 'S';
+    state.shootCooldown = 0;
+
+    combatSystem(state, 0);
+
+    // Should strip first enemy's letter and find secondary target
+    expect(state.enemies[0].word).toBe('OL');
+    expect(state.secondaryTargetId).toBe(100);
+    expect(state.enemies[1].word).toBe('AL');
+  });
+
+  it('should initialize secondaryTargetId to null', () => {
+    const state = createInitialGameState();
+    expect(state.secondaryTargetId).toBeNull();
   });
 });

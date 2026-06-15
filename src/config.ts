@@ -54,7 +54,7 @@ export const GameConfig = Object.freeze({
   heatBar: {
     maxSegments: 5,
     overheatDuration: 2000, // ms
-    cooldownPerSegment: 1500, // ms to cool down one segment
+    cooldownPerSegment: 800, // ms to cool down one segment
     color: '#ff8800',
     overheatColor: '#ff0000',
   },
@@ -84,7 +84,7 @@ export const GameConfig = Object.freeze({
   // Power-ups
   powerUps: {
     choicesPerLevel: 3,
-    options: ['EXPLOSIVE_IMPACT', 'PIERCING_SHOT', 'SLOW_AURA', 'QUICK_COOLING'],
+    options: ['EXPLOSIVE_IMPACT', 'PIERCING_SHOT', 'SLOW_AURA', 'QUICK_COOLING', 'SHARP_SIGHT', 'DUAL_SHOT'],
     explosiveImpact: {
       pushRadius: 150,
       pushStrength: 100,
@@ -94,6 +94,18 @@ export const GameConfig = Object.freeze({
     },
     sharpSight: {
       scoreMultiplier: 1.1,
+    },
+    slowingAura: {
+      radius: 150,
+      speedMultiplier: 0.5,
+      color: '#4488ff',
+      alpha: 0.15,
+    },
+    piercingShot: {
+      enabled: true,
+    },
+    dualShot: {
+      maxTargets: 2,
     },
   },
 });

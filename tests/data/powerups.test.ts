@@ -17,8 +17,8 @@ describe('PowerUpChoice type', () => {
 });
 
 describe('ALL_POWERUPS', () => {
-  it('should contain exactly 3 power-up definitions', () => {
-    expect(ALL_POWERUPS).toHaveLength(3);
+  it('should contain exactly 6 power-up definitions', () => {
+    expect(ALL_POWERUPS).toHaveLength(6);
   });
 
   it('should include EXPLOSIVE_IMPACT', () => {
@@ -37,6 +37,27 @@ describe('ALL_POWERUPS', () => {
     const pu = ALL_POWERUPS.find((p) => p.id === 'SHARP_SIGHT');
     expect(pu).toBeDefined();
     expect(pu!.name).toBe('Vista Aguda');
+  });
+
+  it('should include SLOW_AURA', () => {
+    const pu = ALL_POWERUPS.find((p) => p.id === 'SLOW_AURA');
+    expect(pu).toBeDefined();
+    expect(pu!.name).toBe('Aura Ralentizadora');
+    expect(pu!.description).toBe('Los enemigos cercanos se mueven a la mitad de velocidad');
+  });
+
+  it('should include PIERCING_SHOT', () => {
+    const pu = ALL_POWERUPS.find((p) => p.id === 'PIERCING_SHOT');
+    expect(pu).toBeDefined();
+    expect(pu!.name).toBe('Bala Perforante');
+    expect(pu!.description).toBe('Atraviesa al primer enemigo y daña al que está detrás');
+  });
+
+  it('should include DUAL_SHOT', () => {
+    const pu = ALL_POWERUPS.find((p) => p.id === 'DUAL_SHOT');
+    expect(pu).toBeDefined();
+    expect(pu!.name).toBe('Doble Arma');
+    expect(pu!.description).toBe('Dispara a los dos enemigos más cercanos con la misma letra');
   });
 
   it('should have unique IDs', () => {

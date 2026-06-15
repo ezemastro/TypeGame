@@ -35,6 +35,7 @@ export class GameScene extends Phaser.Scene {
   private gameOverScreen: GameOverScreen | null = null;
   private levelUpScreen: LevelUpScreen | null = null;
   private keyHandler?: (event: KeyboardEvent) => void;
+  private auraCircle: Phaser.GameObjects.Arc | null = null;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -51,6 +52,7 @@ export class GameScene extends Phaser.Scene {
     this.projectiles = [];
     this.gameOverScreen = null;
     this.levelUpScreen = null;
+    this.auraCircle = null;
 
     // Player rectangle
     const p = this.gameState.player;
@@ -101,6 +103,7 @@ export class GameScene extends Phaser.Scene {
           this.levelUpScreen = null;
         });
       }
+      this.syncAuraRendering();
       this.syncRendering();
       this.hud.update(gs);
       return;
@@ -149,8 +152,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Handle projectile creation
-    if (gs.justFired && gs.targetedEnemyId !== null) {
-      this.spawnProjectile();
+    if (gs.justFired) {
+      if (gs.targetedEnemyId !== null) {
+        this.spawnProjectile();
+      }
+      if (gs.secondaryTargetId !== null) {
+        this.spawnSecondaryProjectile();
+      }
       gs.justFired = false;
     }
 
@@ -158,6 +166,7 @@ export class GameScene extends Phaser.Scene {
     this.updateProjectiles(delta);
 
     // Sync rendering
+    this.syncAuraRendering();
     this.syncRendering();
 
     // Update HUD
@@ -166,6 +175,7 @@ export class GameScene extends Phaser.Scene {
     // Reset per-frame state
     gs.lastKeyPressed = null;
     gs.targetedEnemyId = null;
+    gs.secondaryTargetId = null;
   }
 
   private spawnProjectile(): void {
@@ -179,6 +189,21 @@ export class GameScene extends Phaser.Scene {
     this.projectiles.push({
       graphic: proj,
       targetId: this.gameState.targetedEnemyId!,
+    });
+  }
+
+  private spawnSecondaryProjectile(): void {
+    const p = this.gameState.player;
+    const offsetX = 8; // slight horizontal offset so both projectiles are visible
+    const proj = this.add.rectangle(
+      p.x + offsetX, p.y - p.height / 2,
+      GameConfig.shooting.projectileWidth,
+      GameConfig.shooting.projectileHeight,
+      parseInt(GameConfig.shooting.projectileColor.slice(1), 16),
+    );
+    this.projectiles.push({
+      graphic: proj,
+      targetId: this.gameState.secondaryTargetId!,
     });
   }
 
@@ -261,6 +286,34 @@ export class GameScene extends Phaser.Scene {
         render.text.destroy();
         this.enemyRenderMap.delete(id);
       }
+    }
+  }
+
+  private syncAuraRendering(): void {
+    const gs = this.gameState;
+    const auraActive = gs.activePowerUps.includes('SLOW_AURA');
+
+    if (auraActive) {
+      if (!this.auraCircle) {
+        const cfg = GameConfig.powerUps.slowingAura;
+        const color = parseInt(cfg.color.slice(1), 16);
+        this.auraCircle = this.add.circle(
+          gs.player.x + gs.player.width / 2,
+          gs.player.y + gs.player.height / 2,
+          cfg.radius,
+          color,
+          cfg.alpha,
+        );
+        this.auraCircle.setDepth(-1); // behind enemies
+      } else {
+        this.auraCircle.setPosition(
+          gs.player.x + gs.player.width / 2,
+          gs.player.y + gs.player.height / 2,
+        );
+      }
+    } else if (this.auraCircle) {
+      this.auraCircle.destroy();
+      this.auraCircle = null;
     }
   }
 

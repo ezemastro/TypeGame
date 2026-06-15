@@ -16,6 +16,21 @@ export const ALL_POWERUPS: PowerUpChoice[] = [
     name: 'Vista Aguda',
     description: '+10% puntos por cada letra',
   },
+  {
+    id: 'SLOW_AURA',
+    name: 'Aura Ralentizadora',
+    description: 'Los enemigos cercanos se mueven a la mitad de velocidad',
+  },
+  {
+    id: 'PIERCING_SHOT',
+    name: 'Bala Perforante',
+    description: 'Atraviesa al primer enemigo y daña al que está detrás',
+  },
+  {
+    id: 'DUAL_SHOT',
+    name: 'Doble Arma',
+    description: 'Dispara a los dos enemigos más cercanos con la misma letra',
+  },
 ];
 
 export function getRandomChoices(count: number): PowerUpChoice[] {

@@ -51,5 +51,86 @@ export function combatSystem(state: GameState, delta: number): GameState {
     }
   }
 
+  // Piercing Shot: damage another enemy behind the primary target
+  if (
+    state.activePowerUps.includes('PIERCING_SHOT') &&
+    state.lastKeyPressed !== null
+  ) {
+    const playerCX = state.player.x + state.player.width / 2;
+    const playerCY = state.player.y + state.player.height / 2;
+    const primaryCX = enemy.x + enemy.width / 2;
+    const primaryCY = enemy.y + enemy.height / 2;
+
+    // Direction from player to primary target
+    const pdx = primaryCX - playerCX;
+    const pdy = primaryCY - playerCY;
+    const primaryDist = Math.sqrt(pdx * pdx + pdy * pdy);
+    if (primaryDist > 0) {
+      const pnx = pdx / primaryDist;
+      const pny = pdy / primaryDist;
+      const strippedLetter = state.lastKeyPressed;
+
+      for (const other of state.enemies) {
+        if (other.id === enemy.id || !other.alive) continue;
+        if (!other.word.startsWith(strippedLetter)) continue;
+
+        const otherCX = other.x + other.width / 2;
+        const otherCY = other.y + other.height / 2;
+        const odx = otherCX - playerCX;
+        const ody = otherCY - playerCY;
+        const otherDist = Math.sqrt(odx * odx + ody * ody);
+
+        if (otherDist <= primaryDist) continue;
+
+        const onx = odx / otherDist;
+        const ony = ody / otherDist;
+        const dot = pnx * onx + pny * ony;
+
+        if (dot > 0.96) {
+          // Piercing hit: strip first letter, no points, no pendingDestruction
+          other.word = other.word.slice(1);
+          break; // only one pierce per shot
+        }
+      }
+    }
+  }
+
+  // Dual Shot: find a second target with the same starting letter
+  if (
+    state.activePowerUps.includes('DUAL_SHOT') &&
+    state.lastKeyPressed !== null
+  ) {
+    const playerCX = state.player.x + state.player.width / 2;
+    const playerCY = state.player.y + state.player.height / 2;
+    const strippedLetter = state.lastKeyPressed;
+
+    let closestDist = Infinity;
+    let closestEnemy: typeof enemy | null = null;
+
+    for (const other of state.enemies) {
+      if (other.id === enemy.id || !other.alive) continue;
+      if (!other.word.startsWith(strippedLetter)) continue;
+
+      const otherCX = other.x + other.width / 2;
+      const otherCY = other.y + other.height / 2;
+      const odx = otherCX - playerCX;
+      const ody = otherCY - playerCY;
+      const otherDist = Math.sqrt(odx * odx + ody * ody);
+
+      if (otherDist < closestDist) {
+        closestDist = otherDist;
+        closestEnemy = other;
+      }
+    }
+
+    if (closestEnemy) {
+      state.secondaryTargetId = closestEnemy.id;
+      closestEnemy.word = closestEnemy.word.slice(1);
+      if (closestEnemy.word.length === 0) {
+        closestEnemy.pendingDestruction = true;
+      }
+    }
+  }
+
   return state;
 }

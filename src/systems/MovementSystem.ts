@@ -1,4 +1,5 @@
 import type { GameState } from '../entities/types';
+import { GameConfig } from '../config';
 
 export function movementSystem(state: GameState, delta: number): GameState {
   if (state.gameOver) return state;
@@ -6,6 +7,9 @@ export function movementSystem(state: GameState, delta: number): GameState {
   const deltaSeconds = delta / 1000;
   const playerCenterX = state.player.x + state.player.width / 2;
   const playerCenterY = state.player.y + state.player.height / 2;
+  const slowingAuraActive = state.activePowerUps.includes('SLOW_AURA');
+  const auraRadius = GameConfig.powerUps.slowingAura.radius;
+  const auraSpeedMultiplier = GameConfig.powerUps.slowingAura.speedMultiplier;
 
   for (const enemy of state.enemies) {
     if (enemy.alive) {
@@ -16,8 +20,12 @@ export function movementSystem(state: GameState, delta: number): GameState {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist > 1) {
-        enemy.x += (dx / dist) * enemy.speed * deltaSeconds;
-        enemy.y += (dy / dist) * enemy.speed * deltaSeconds;
+        let speedMultiplier = 1;
+        if (slowingAuraActive && dist < auraRadius) {
+          speedMultiplier = auraSpeedMultiplier;
+        }
+        enemy.x += (dx / dist) * enemy.speed * deltaSeconds * speedMultiplier;
+        enemy.y += (dy / dist) * enemy.speed * deltaSeconds * speedMultiplier;
       }
     }
   }

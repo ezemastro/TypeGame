@@ -255,4 +255,265 @@ describe('CombatSystem', () => {
       expect(state.enemies[1].x).toBeLessThan(300);
     });
   });
+
+  describe('Piercing Shot power-up', () => {
+    it('should pierce and strip letter from enemy behind at same angle', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      const behind = createEnemy('SAL', 2);
+      behind.x = 100;
+      behind.y = 200;
+      const state = makeState(
+        [primary, behind],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          score: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: ['PIERCING_SHOT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Primary: S stripped → 'OL'
+      expect(state.enemies[0].word).toBe('OL');
+      // Behind: S stripped → 'AL' (pierced)
+      expect(state.enemies[1].word).toBe('AL');
+      // Behind gets no extra points
+      expect(state.score).toBe(GameConfig.scoring.pointsPerLetter);
+    });
+
+    it('should NOT pierce enemy at significantly different angle', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200; // to the left
+      primary.y = 300;
+      const offAngle = createEnemy('SAL', 2);
+      offAngle.x = 600; // to the right — very different angle
+      offAngle.y = 300;
+      const state = makeState(
+        [primary, offAngle],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: ['PIERCING_SHOT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Primary stripped
+      expect(state.enemies[0].word).toBe('OL');
+      // Off-angle NOT pierced
+      expect(state.enemies[1].word).toBe('SAL');
+    });
+
+    it('should NOT pierce enemy behind that starts with different letter', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      const behind = createEnemy('LUZ', 2);
+      behind.x = 100;
+      behind.y = 200;
+      const state = makeState(
+        [primary, behind],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: ['PIERCING_SHOT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      expect(state.enemies[0].word).toBe('OL');
+      // Different starting letter → NOT pierced
+      expect(state.enemies[1].word).toBe('LUZ');
+    });
+
+    it('should NOT pierce without PIERCING_SHOT active', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      const behind = createEnemy('SAL', 2);
+      behind.x = 100;
+      behind.y = 200;
+      const state = makeState(
+        [primary, behind],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: [],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      expect(state.enemies[0].word).toBe('OL');
+      expect(state.enemies[1].word).toBe('SAL');
+    });
+
+    it('should NOT set pendingDestruction on pierced enemy even if word emptied', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      const behind = createEnemy('S', 2); // single-letter word
+      behind.x = 100;
+      behind.y = 200;
+      const state = makeState(
+        [primary, behind],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: ['PIERCING_SHOT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Primary stripped
+      expect(state.enemies[0].word).toBe('OL');
+      // Behind emptied but NOT marked for destruction
+      expect(state.enemies[1].word).toBe('');
+      expect(state.enemies[1].alive).toBe(true);
+      expect(state.enemies[1].pendingDestruction).toBe(false);
+      expect(state.gearDropped).toBe(false);
+    });
+  });
+
+  describe('Dual Shot power-up', () => {
+    it('should find secondary target with same starting letter and strip its first letter', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      const secondary = createEnemy('SAL', 2);
+      secondary.x = 400;
+      secondary.y = 300;
+      const state = makeState(
+        [primary, secondary],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: ['DUAL_SHOT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Primary stripped
+      expect(state.enemies[0].word).toBe('OL');
+      // Secondary stripped
+      expect(state.enemies[1].word).toBe('AL');
+      // Secondary target ID set
+      expect(state.secondaryTargetId).toBe(2);
+    });
+
+    it('should set pendingDestruction on secondary if word emptied', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      const secondary = createEnemy('S', 2); // single letter
+      secondary.x = 400;
+      secondary.y = 300;
+      const state = makeState(
+        [primary, secondary],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: ['DUAL_SHOT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Secondary word emptied → pending destruction
+      expect(state.enemies[1].word).toBe('');
+      expect(state.enemies[1].pendingDestruction).toBe(true);
+      expect(state.secondaryTargetId).toBe(2);
+    });
+
+    it('should NOT find secondary target without DUAL_SHOT active', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      const other = createEnemy('SAL', 2);
+      other.x = 400;
+      other.y = 300;
+      const state = makeState(
+        [primary, other],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: [],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      expect(state.enemies[1].word).toBe('SAL');
+      expect(state.secondaryTargetId).toBeNull();
+    });
+
+    it('should NOT find secondary target if no other enemy has same letter', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      const other = createEnemy('LUZ', 2);
+      other.x = 400;
+      other.y = 300;
+      const state = makeState(
+        [primary, other],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: ['DUAL_SHOT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      expect(state.enemies[1].word).toBe('LUZ');
+      expect(state.secondaryTargetId).toBeNull();
+    });
+
+    it('should pick the closest matching enemy as secondary target', () => {
+      const primary = createEnemy('SOL', 1);
+      primary.x = 200;
+      primary.y = 300;
+      // Player center (425, 525)
+      // closeMatch at (420, 500) → center (450, 530): dist ≈ 25.5
+      const closeMatch = createEnemy('SAL', 2);
+      closeMatch.x = 420;
+      closeMatch.y = 500;
+      // farMatch at (100, 100) → center (130, 130): dist ≈ 492
+      const farMatch = createEnemy('SER', 3);
+      farMatch.x = 100;
+      farMatch.y = 100;
+      const state = makeState(
+        [primary, closeMatch, farMatch],
+        {
+          targetedEnemyId: 1,
+          shootCooldown: 0,
+          lastKeyPressed: 'S',
+          activePowerUps: ['DUAL_SHOT'],
+        },
+      );
+
+      combatSystem(state, 0);
+
+      // Should pick closeMatch (id=2) since it's closer to player
+      expect(state.secondaryTargetId).toBe(2);
+      expect(state.enemies[1].word).toBe('AL'); // stripped
+      expect(state.enemies[2].word).toBe('SER'); // NOT stripped
+    });
+  });
 });

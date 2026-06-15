@@ -33,6 +33,7 @@ export interface GameState {
   activePowerUps: string[];
   isPaused: boolean;
   levelUpChoices: PowerUpChoice[];
+  secondaryTargetId: number | null;
 }
 
 export function createInitialGameState(): GameState {
@@ -61,5 +62,6 @@ export function createInitialGameState(): GameState {
     activePowerUps: [],
     isPaused: false,
     levelUpChoices: [],
+    secondaryTargetId: null,
   };
 }

@@ -70,6 +70,31 @@ describe('GameConfig', () => {
     expect(GameConfig.powerUps.sharpSight.scoreMultiplier).toBeGreaterThan(1);
   });
 
+  it('should have slowingAura config with radius, speedMultiplier, color, alpha', () => {
+    expect(GameConfig.powerUps.slowingAura).toBeDefined();
+    expect(GameConfig.powerUps.slowingAura.radius).toBe(150);
+    expect(GameConfig.powerUps.slowingAura.speedMultiplier).toBe(0.5);
+    expect(GameConfig.powerUps.slowingAura.color).toBe('#4488ff');
+    expect(GameConfig.powerUps.slowingAura.alpha).toBe(0.15);
+  });
+
+  it('should have piercingShot config with enabled flag', () => {
+    expect(GameConfig.powerUps.piercingShot).toBeDefined();
+    expect(GameConfig.powerUps.piercingShot.enabled).toBe(true);
+  });
+
+  it('should have dualShot config with maxTargets', () => {
+    expect(GameConfig.powerUps.dualShot).toBeDefined();
+    expect(GameConfig.powerUps.dualShot.maxTargets).toBe(2);
+  });
+
+  it('should include all 6 power-up IDs in options array', () => {
+    expect(GameConfig.powerUps.options).toContain('SLOW_AURA');
+    expect(GameConfig.powerUps.options).toContain('PIERCING_SHOT');
+    expect(GameConfig.powerUps.options).toContain('DUAL_SHOT');
+    expect(GameConfig.powerUps.options).toHaveLength(6);
+  });
+
   it('should be frozen (readonly) at runtime', () => {
     expect(Object.isFrozen(GameConfig)).toBe(true);
   });

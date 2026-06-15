@@ -136,6 +136,103 @@ describe('MovementSystem', () => {
     const state = makeState([]);
     expect(() => movementSystem(state, 1000)).not.toThrow();
   });
+
+  describe('Slowing Aura', () => {
+    it('should slow enemy within radius when SLOW_AURA is active', () => {
+      const enemy = createEnemy('TEST', 1);
+      // Place enemy directly above player, 100px away (within 150 radius)
+      enemy.x = 425 - 30; // enemy center X = 425
+      enemy.y = 425 - 30; // enemy center Y = 425
+      enemy.speed = 80;
+      const state = makeState([enemy], { activePowerUps: ['SLOW_AURA'] });
+      // Player center: (425, 525). Enemy center: (425, 425).
+      // dx=0, dy=100, dist=100 → within radius → half speed (40 px/s)
+      // enemy.y = top-left. centerY = enemy.y + height/2 = 395 + 30 = 425.
+      // After 1s: centerY = 425 + 40 = 465. enemy.y = 465 - 30 = 435.
+
+      movementSystem(state, 1000);
+
+      // Enemy moves toward player but at half speed
+      expect(state.enemies[0].x).toBeCloseTo(395, 0); // unchanged
+      expect(state.enemies[0].y).toBeCloseTo(435, 0); // 395 + 40 = 435
+    });
+
+    it('should NOT slow enemy outside radius even with SLOW_AURA active', () => {
+      const enemy = createEnemy('TEST', 1);
+      // Place enemy 200px above player (outside 150 radius)
+      enemy.x = 425 - 30; // enemy center X = 425
+      enemy.y = 325 - 30; // enemy center Y = 325 (top-left=295)
+      enemy.speed = 80;
+      const state = makeState([enemy], { activePowerUps: ['SLOW_AURA'] });
+      // dist = 200 > 150 radius → normal speed
+      // After 1s: enemy.y = 295 + 80 = 375
+
+      movementSystem(state, 1000);
+
+      expect(state.enemies[0].x).toBeCloseTo(395, 0);
+      expect(state.enemies[0].y).toBeCloseTo(375, 0); // normal speed
+    });
+
+    it('should NOT slow enemy without SLOW_AURA active (even within radius)', () => {
+      const enemy = createEnemy('TEST', 1);
+      enemy.x = 425 - 30;
+      enemy.y = 425 - 30; // top-left=395, centerY=425
+      enemy.speed = 80;
+      const state = makeState([enemy], { activePowerUps: [] });
+
+      movementSystem(state, 1000);
+
+      // Full speed even though within radius
+      expect(state.enemies[0].y).toBeCloseTo(475, 0); // 395 + 80 = 475
+    });
+
+    it('should slow nearby enemy but not far enemy with SLOW_AURA', () => {
+      const closeEnemy = createEnemy('CLOSE', 1);
+      closeEnemy.x = 425 - 30;
+      closeEnemy.y = 425 - 30; // top-left=395, centerY=425
+      closeEnemy.speed = 100;
+
+      const farEnemy = createEnemy('FAR', 2);
+      farEnemy.x = 425 - 30;
+      farEnemy.y = 200 - 30; // top-left=170, centerY=200
+      farEnemy.speed = 100;
+
+      const state = makeState([closeEnemy, farEnemy], { activePowerUps: ['SLOW_AURA'] });
+      // closeEnemy: within radius → 100 * 0.5 = 50px → new y = 395 + 50 = 445
+      // farEnemy: outside radius → 100px → new y = 170 + 100 = 270
+
+      movementSystem(state, 1000);
+
+      expect(state.enemies[0].y).toBeCloseTo(445, 0); // slowed: +50px
+      expect(state.enemies[1].y).toBeCloseTo(270, 0); // normal: +100px
+
+      // farEnemy should move more than closeEnemy
+      expect(state.enemies[1].y - 170).toBeGreaterThan(state.enemies[0].y - 395);
+    });
+
+    it('should NOT slow dead enemies within radius', () => {
+      const aliveEnemy = createEnemy('ALIVE', 1);
+      aliveEnemy.x = 425 - 30;
+      aliveEnemy.y = 425 - 30; // top-left=395
+      aliveEnemy.speed = 80;
+
+      const deadEnemy = createEnemy('DEAD', 2);
+      deadEnemy.x = 425 - 30;
+      deadEnemy.y = 425 - 30; // top-left=395
+      deadEnemy.speed = 80;
+      deadEnemy.alive = false;
+
+      const state = makeState([aliveEnemy, deadEnemy], { activePowerUps: ['SLOW_AURA'] });
+
+      movementSystem(state, 1000);
+
+      // Alive enemy: slowed, 80 * 0.5 = 40px → new y = 395 + 40 = 435
+      expect(state.enemies[0].y).toBeCloseTo(435, 0);
+      // Dead enemy: not moved at all (alive check before aura logic)
+      expect(state.enemies[1].y).toBe(395);
+      expect(state.enemies[1].x).toBe(395);
+    });
+  });
 });
 
 
