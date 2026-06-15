@@ -94,4 +94,113 @@ describe('CollisionSystem', () => {
     expect(() => collisionSystem(state)).not.toThrow();
     expect(state.gameOver).toBe(false);
   });
+
+  describe('Shield power-up', () => {
+    it('should absorb collision when shieldCharges > 0 (no game over)', () => {
+      const enemy = createEnemy('SOL', 1);
+      enemy.x = 400;
+      enemy.y = 490;
+      enemy.alive = true;
+      const state = makeState([enemy], {
+        powerUpState: {
+          cooldowns: {},
+          shieldCharges: 1,
+          allyCount: 0,
+          freezeActiveUntil: 0,
+        },
+      });
+
+      collisionSystem(state);
+
+      // Shield absorbed: charges decremented, cooldown set, enemy destroyed
+      expect(state.powerUpState.shieldCharges).toBe(0);
+      expect(state.powerUpState.cooldowns.SHIELD).toBe(30000);
+      expect(state.enemies[0].alive).toBe(false);
+      // Game should NOT be over
+      expect(state.gameOver).toBe(false);
+    });
+
+    it('should trigger game over when shieldCharges is 0 (depleted)', () => {
+      const enemy = createEnemy('SOL', 1);
+      enemy.x = 400;
+      enemy.y = 490;
+      enemy.alive = true;
+      const state = makeState([enemy], {
+        powerUpState: {
+          cooldowns: {},
+          shieldCharges: 0,
+          allyCount: 0,
+          freezeActiveUntil: 0,
+        },
+      });
+
+      collisionSystem(state);
+
+      expect(state.gameOver).toBe(true);
+      expect(state.enemies[0].alive).toBe(true); // enemy NOT destroyed
+    });
+
+    it('should trigger game over when no shield powerUpState (backward compat)', () => {
+      const enemy = createEnemy('SOL', 1);
+      enemy.x = 400;
+      enemy.y = 490;
+      enemy.alive = true;
+      // Default createInitialGameState has shieldCharges=0
+      const state = makeState([enemy]);
+
+      collisionSystem(state);
+
+      expect(state.gameOver).toBe(true);
+    });
+
+    it('should only absorb first collision in a frame with multiple enemies', () => {
+      const enemy1 = createEnemy('EN1', 1);
+      enemy1.x = 400;
+      enemy1.y = 490;
+      enemy1.alive = true;
+      const enemy2 = createEnemy('EN2', 2);
+      enemy2.x = 400;
+      enemy2.y = 490;
+      enemy2.alive = true;
+      const state = makeState([enemy1, enemy2], {
+        powerUpState: {
+          cooldowns: {},
+          shieldCharges: 1,
+          allyCount: 0,
+          freezeActiveUntil: 0,
+        },
+      });
+
+      collisionSystem(state);
+
+      // First enemy absorbed → shield depleted
+      expect(state.powerUpState.shieldCharges).toBe(0);
+      expect(state.enemies[0].alive).toBe(false);
+      // Second enemy collision → game over (shield already used up)
+      expect(state.gameOver).toBe(true);
+      expect(state.enemies[1].alive).toBe(true); // second enemy survives
+    });
+
+    it('should absorb with 3 charges and still have 2 left', () => {
+      const enemy = createEnemy('SOL', 1);
+      enemy.x = 400;
+      enemy.y = 490;
+      enemy.alive = true;
+      const state = makeState([enemy], {
+        powerUpState: {
+          cooldowns: {},
+          shieldCharges: 3,
+          allyCount: 0,
+          freezeActiveUntil: 0,
+        },
+      });
+
+      collisionSystem(state);
+
+      expect(state.powerUpState.shieldCharges).toBe(2);
+      expect(state.powerUpState.cooldowns.SHIELD).toBe(30000);
+      expect(state.enemies[0].alive).toBe(false);
+      expect(state.gameOver).toBe(false);
+    });
+  });
 });

@@ -17,8 +17,8 @@ describe('PowerUpChoice type', () => {
 });
 
 describe('ALL_POWERUPS', () => {
-  it('should contain exactly 6 power-up definitions', () => {
-    expect(ALL_POWERUPS).toHaveLength(6);
+  it('should contain exactly 12 power-up definitions (6 original + 6 new)', () => {
+    expect(ALL_POWERUPS).toHaveLength(12);
   });
 
   it('should include EXPLOSIVE_IMPACT', () => {
@@ -60,6 +60,25 @@ describe('ALL_POWERUPS', () => {
     expect(pu!.description).toBe('Dispara a los dos enemigos más cercanos con la misma letra');
   });
 
+  // New powerups from powerups-rework
+  const expectedNew = [
+    { id: 'SHIELD', name: 'Escudo', description: 'Absorbe 1 golpe. Recarga cada 30s' },
+    { id: 'ALLY', name: 'Aliado', description: 'Dron que dispara automáticamente' },
+    { id: 'MAGNETIC_FIELD', name: 'Campo Magnético', description: 'Atrae enemigos cercanos' },
+    { id: 'BURST_FIRE', name: 'Ráfaga', description: 'Dispara 2 proyectiles por letra' },
+    { id: 'LIFE_STEAL', name: 'Robo de Vida', description: 'Eliminar enemigos reduce el calor' },
+    { id: 'FREEZE', name: 'Congelación', description: 'Los enemigos cercanos se congelan' },
+  ];
+
+  for (const expected of expectedNew) {
+    it(`should include ${expected.id}`, () => {
+      const found = ALL_POWERUPS.find((p) => p.id === expected.id);
+      expect(found).toBeDefined();
+      expect(found!.name).toBe(expected.name);
+      expect(found!.description).toBe(expected.description);
+    });
+  }
+
   it('should have unique IDs', () => {
     const ids = ALL_POWERUPS.map((p) => p.id);
     const uniqueIds = new Set(ids);
@@ -79,7 +98,7 @@ describe('getRandomChoices', () => {
   });
 
   it('should return all choices when count >= total', () => {
-    const choices = getRandomChoices(10);
+    const choices = getRandomChoices(100);
     expect(choices).toHaveLength(ALL_POWERUPS.length);
   });
 

@@ -11,6 +11,14 @@ import { difficultySystem } from '../systems/DifficultySystem';
 import { scoreSystem } from '../systems/ScoreSystem';
 import { xpSystem } from '../systems/XPSystem';
 import { collisionSystem } from '../systems/CollisionSystem';
+import { powerUpSystem } from '../systems/PowerUpSystem';
+import {
+  getEnemiesInRadius,
+  calculateBurstAngles,
+  findNthClosestEnemy,
+  getShieldCircleRadii,
+  mapDevKeyToPowerUp,
+} from '../systems/PowerUpHelpers';
 import { createHUD, type HUD } from '../ui/HUD';
 import { showGameOver, type GameOverScreen } from '../ui/GameOverScreen';
 import { showLevelUp, type LevelUpScreen } from '../ui/LevelUpScreen';
@@ -54,6 +62,13 @@ export class GameScene extends Phaser.Scene {
   private auraCircle: Phaser.GameObjects.Arc | null = null;
   private tileSprite!: Phaser.GameObjects.TileSprite;
   private parallaxItems: ParallaxItem[] = [];
+  // PowerUp rendering state
+  private shieldCircles: Phaser.GameObjects.Arc[] = [];
+  private allyDrones: Phaser.GameObjects.Container[] = [];
+  private allyTimers: Phaser.Time.TimerEvent[] = [];
+  private magneticFieldRing: Phaser.GameObjects.Arc | null = null;
+  private freezeOverlay: Phaser.GameObjects.Rectangle | null = null;
+  private freezeVfxTriggered: boolean = false;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -73,6 +88,12 @@ export class GameScene extends Phaser.Scene {
     this.enemyRenderMap = new Map();
     this.projectiles = [];
     this.parallaxItems = [];
+    this.shieldCircles = [];
+    this.allyDrones = [];
+    this.allyTimers = [];
+    this.magneticFieldRing = null;
+    this.freezeOverlay = null;
+    this.freezeVfxTriggered = false;
     this.gameOverScreen = null;
     this.levelUpScreen = null;
     this.auraCircle = null;
@@ -141,6 +162,20 @@ export class GameScene extends Phaser.Scene {
       if ((event.key === 'k' || event.key === 'K') && !this.gameState.isPaused) {
         this.gameState.xp = this.gameState.xpToNextLevel;
         return;
+      }
+      // Dev mode: number keys activate powerups without level-up
+      if (import.meta.env.DEV && !this.gameState.isPaused) {
+        const powerUpId = mapDevKeyToPowerUp(event.key);
+        if (powerUpId && !this.gameState.activePowerUps.includes(powerUpId)) {
+          this.gameState.activePowerUps.push(powerUpId);
+          // Special handling for shield/ally on dev activation
+          if (powerUpId === 'SHIELD') {
+            this.gameState.powerUpState.shieldCharges += 1;
+          } else if (powerUpId === 'ALLY') {
+            this.gameState.powerUpState.allyCount += 1;
+          }
+          return;
+        }
       }
       if (this.gameState.isPaused) return;
       if (event.key.length === 1 && /^[A-Za-z]$/.test(event.key)) {
@@ -216,6 +251,9 @@ export class GameScene extends Phaser.Scene {
       }
       this.syncAuraRendering();
       this.syncShipRendering();
+      this.syncShieldRendering();
+      this.syncAllyRendering();
+      this.syncMagneticFieldRing();
       this.syncRendering();
       this.hud.update(gs);
       return;
@@ -249,6 +287,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     // Run systems
+    powerUpSystem(gs, delta);
     spawnSystem(gs, delta);
     movementSystem(gs, delta);
     combatSystem(gs, delta);
@@ -287,6 +326,9 @@ export class GameScene extends Phaser.Scene {
 
     gs.enemies = gs.enemies.filter((e) => e.alive);
 
+    // Freeze time-scale management (3.4)
+    this.handleFreezeTimeScale(gs);
+
     if (gs.gameOver) {
       this.tweens.timeScale = 0;
       this.gameOverScreen = showGameOver(this, gs.score);
@@ -305,8 +347,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.updateProjectiles(delta);
+
+    // Life steal: reduce heat on kill (3.7)
+    this.handleLifeSteal(gs);
+
     this.syncAuraRendering();
     this.syncShipRendering();
+    this.syncShieldRendering();
+    this.syncAllyRendering();
+    this.syncMagneticFieldRing();
     this.syncRendering();
     this.hud.update(gs);
 
@@ -316,11 +365,34 @@ export class GameScene extends Phaser.Scene {
   }
 
   private spawnProjectile(): void {
-    const p = this.gameState.player;
+    const gs = this.gameState;
+    const originX = gs.player.x;
+    const originY = gs.player.y - gs.player.height / 2;
+
+    // Burst fire: spawn two projectiles at slight angle offset (3.3)
+    if (gs.activePowerUps.includes('BURST_FIRE') && gs.targetedEnemyId !== null) {
+      const spreadDeg = GameConfig.powerUps.burstFire.spreadDegrees;
+      // Compute base angle from player to target for direction offset
+      const target = gs.enemies.find((e) => e.id === gs.targetedEnemyId && e.alive);
+      if (target) {
+        const baseAngle = Math.atan2(
+          (target.y + target.height / 2) - gs.player.y,
+          (target.x + target.width / 2) - gs.player.x,
+        );
+        const [angleA, angleB] = calculateBurstAngles(baseAngle, spreadDeg);
+        this.createProjectileAt(originX, originY, gs.targetedEnemyId, angleA);
+        this.createProjectileAt(originX + 4, originY, gs.targetedEnemyId, angleB);
+        return;
+      }
+    }
+
+    this.createProjectileAt(originX, originY, gs.targetedEnemyId!);
+  }
+
+  /** Create a single projectile at origin targeting enemyId. */
+  private createProjectileAt(originX: number, originY: number, targetId: number, _angle?: number): void {
     const texW = GameConfig.shooting.projectileWidth;
     const texH = GameConfig.shooting.projectileHeight;
-    const originX = p.x;
-    const originY = p.y - p.height / 2;
 
     // Fallback: if laser texture fails, create a cyan energy bolt
     if (!this.textures.exists('laser')) {
@@ -332,7 +404,7 @@ export class GameScene extends Phaser.Scene {
       this.projectiles.push({
         image: rect as unknown as Phaser.GameObjects.Image,
         glow: glow as unknown as Phaser.GameObjects.Image,
-        targetId: this.gameState.targetedEnemyId!,
+        targetId,
         hasPierced: false,
       });
       return;
@@ -352,7 +424,7 @@ export class GameScene extends Phaser.Scene {
     this.projectiles.push({
       image: img,
       glow,
-      targetId: this.gameState.targetedEnemyId!,
+      targetId,
       hasPierced: false,
     });
   }
@@ -430,6 +502,8 @@ export class GameScene extends Phaser.Scene {
           // Explosive Impact VFX
           if (this.gameState.activePowerUps.includes('EXPLOSIVE_IMPACT')) {
             this.spawnExplosion(target.x, target.y);
+            // Explosive push tween: push enemies within 150px (3.2)
+            this.applyExplosivePush(target.x + target.width / 2, target.y + target.height / 2);
           }
         }
 
@@ -739,6 +813,236 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
+  // ── 3.2 Explosive Push ────────────────────────────────────────────
+
+  private applyExplosivePush(cx: number, cy: number): void {
+    const gs = this.gameState;
+    const cfg = GameConfig.powerUps.explosiveImpact;
+    const pushed = getEnemiesInRadius(gs, cx, cy, cfg.pushRadius);
+
+    for (const enemy of pushed) {
+      const ecx = enemy.x + enemy.width / 2;
+      const ecy = enemy.y + enemy.height / 2;
+      const dx = ecx - cx;
+      const dy = ecy - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+      const nx = dx / dist;
+      const ny = dy / dist;
+      const pushDist = cfg.pushStrength;
+
+      // Disable collision temporarily during push
+      const origX = enemy.x;
+      const origY = enemy.y;
+      const targetX = enemy.x + nx * pushDist;
+      const targetY = enemy.y + ny * pushDist;
+
+      // Store pre-tween flag to prevent collision during slide
+      const render = this.enemyRenderMap.get(enemy.id);
+      if (render) {
+        this.tweens.add({
+          targets: render.image,
+          x: targetX,
+          y: targetY,
+          duration: 200,
+          ease: 'Power2',
+          onUpdate: () => {
+            // Sync enemy state position while tweening
+            enemy.x = render.image.x;
+            enemy.y = render.image.y;
+          },
+        });
+      }
+    }
+  }
+
+  // ── 3.4 Freeze Time-Scale ─────────────────────────────────────────
+
+  private handleFreezeTimeScale(gs: GameState): void {
+    const freezeCfg = GameConfig.powerUps.freeze;
+    const isFrozen = gs.powerUpState.freezeActiveUntil > gs.elapsedTime;
+
+    if (isFrozen) {
+      this.time.timeScale = freezeCfg.timeScale;
+      this.tweens.timeScale = freezeCfg.timeScale;
+
+      // Ice wave VFX when freeze just activated
+      if (!this.freezeVfxTriggered) {
+        this.freezeVfxTriggered = true;
+        this.spawnIceWave(gs.player.x + gs.player.width / 2, gs.player.y + gs.player.height / 2);
+
+        // Background tint
+        if (!this.freezeOverlay) {
+          this.freezeOverlay = this.add.rectangle(
+            GameConfig.canvas.width / 2,
+            GameConfig.canvas.height / 2,
+            GameConfig.canvas.width,
+            GameConfig.canvas.height,
+            0x1A237E,
+            0.1,
+          );
+          this.freezeOverlay.setDepth(90);
+        }
+      }
+    } else {
+      // Freeze expired — restore time scales
+      if (this.freezeVfxTriggered) {
+        this.time.timeScale = 1;
+        this.tweens.timeScale = 1;
+        this.freezeVfxTriggered = false;
+
+        if (this.freezeOverlay) {
+          this.freezeOverlay.destroy();
+          this.freezeOverlay = null;
+        }
+      }
+    }
+  }
+
+  private spawnIceWave(x: number, y: number): void {
+    const ring = this.add.circle(x, y, 10, 0x80DEEA, 0.4);
+    ring.setDepth(91);
+    this.tweens.add({
+      targets: ring,
+      radius: 300,
+      alpha: 0,
+      duration: 500,
+      ease: 'Power2',
+      onComplete: () => ring.destroy(),
+    });
+  }
+
+  // ── 3.7 Life Steal ────────────────────────────────────────────────
+
+  private handleLifeSteal(gs: GameState): void {
+    if (!gs.gearDropped) return;
+    if (!gs.activePowerUps.includes('LIFE_STEAL')) return;
+
+    // Count how many LIFE_STEAL stacks the player has
+    const stacks = gs.activePowerUps.filter((id) => id === 'LIFE_STEAL').length;
+    const reduction = stacks * GameConfig.powerUps.lifeSteal.heatReduction;
+
+    gs.heatSegments = Math.max(0, gs.heatSegments - reduction);
+  }
+
+  // ── 3.5 Shield Concentric Circles ─────────────────────────────────
+
+  private syncShieldRendering(): void {
+    const gs = this.gameState;
+    const cfg = GameConfig.powerUps.shield;
+    const charges = gs.powerUpState.shieldCharges;
+
+    // Remove excess circles
+    while (this.shieldCircles.length > charges) {
+      const circle = this.shieldCircles.pop()!;
+      circle.destroy();
+    }
+
+    // Add circles if needed
+    const radii = getShieldCircleRadii(charges, cfg.circleRadius, cfg.radiusStep);
+    const px = gs.player.x + gs.player.width / 2;
+    const py = gs.player.y + gs.player.height / 2;
+    const color = parseInt(cfg.color.slice(1), 16);
+
+    for (let i = 0; i < radii.length; i++) {
+      if (i < this.shieldCircles.length) {
+        // Update existing
+        this.shieldCircles[i].setPosition(px, py);
+        this.shieldCircles[i].setRadius(radii[i]);
+      } else {
+        // Create new
+        const circle = this.add.circle(px, py, radii[i], color, 0);
+        circle.setStrokeStyle(2, color, cfg.alpha);
+        circle.setDepth(12);
+        this.shieldCircles.push(circle);
+      }
+    }
+  }
+
+  // ── 3.6 Ally Drone ────────────────────────────────────────────────
+
+  private syncAllyRendering(): void {
+    const gs = this.gameState;
+    const allyCfg = GameConfig.powerUps.ally;
+    const targetCount = gs.powerUpState.allyCount;
+
+    // Remove excess drones and their timers
+    while (this.allyDrones.length > targetCount) {
+      const drone = this.allyDrones.pop()!;
+      drone.destroy();
+      const timer = this.allyTimers.pop()!;
+      timer.destroy();
+    }
+
+    // Add drones if needed
+    const px = gs.player.x;
+    const py = gs.player.y;
+
+    for (let i = 0; i < targetCount; i++) {
+      const colorStr = allyCfg.colorPalette[i % allyCfg.colorPalette.length];
+      const color = parseInt(colorStr.slice(1), 16);
+
+      if (i < this.allyDrones.length) {
+        // Reposition existing drone
+        const droneX = px + (i + 1) * allyCfg.horizontalOffset;
+        this.allyDrones[i].setPosition(droneX, py);
+      } else {
+        // Create new drone
+        const droneX = px + (i + 1) * allyCfg.horizontalOffset;
+        const container = this.add.container(droneX, py);
+        container.setDepth(13);
+
+        // Drone body: small circle
+        const body = this.add.circle(0, 0, 6, color);
+        container.add(body);
+
+        // Drone detail: smaller rect (weapon)
+        const weapon = this.add.rectangle(0, -8, 3, 6, color);
+        container.add(weapon);
+
+        this.allyDrones.push(container);
+
+        // Auto-fire timer: targets second-closest enemy
+        const timer = this.time.addEvent({
+          delay: allyCfg.fireRateMs,
+          loop: true,
+          callback: () => {
+            if (gs.gameOver || gs.isPaused) return;
+            const target = findNthClosestEnemy(gs, px, py, 2);
+            if (target) {
+              this.createProjectileAt(container.x, container.y, target.id);
+            }
+          },
+        });
+        this.allyTimers.push(timer);
+      }
+    }
+  }
+
+  // ── 3.7 Magnetic Field Ring ───────────────────────────────────────
+
+  private syncMagneticFieldRing(): void {
+    const gs = this.gameState;
+    const active = gs.activePowerUps.includes('MAGNETIC_FIELD');
+    const cfg = GameConfig.powerUps.magneticField;
+
+    if (active) {
+      const px = gs.player.x + gs.player.width / 2;
+      const py = gs.player.y + gs.player.height / 2;
+      const color = parseInt(cfg.ringColor.slice(1), 16);
+
+      if (!this.magneticFieldRing) {
+        this.magneticFieldRing = this.add.circle(px, py, cfg.radius, color, 0);
+        this.magneticFieldRing.setStrokeStyle(1, color, cfg.ringAlpha);
+        this.magneticFieldRing.setDepth(3);
+      } else {
+        this.magneticFieldRing.setPosition(px, py);
+      }
+    } else if (this.magneticFieldRing) {
+      this.magneticFieldRing.destroy();
+      this.magneticFieldRing = null;
+    }
+  }
+
   private restartGame(): void {
     if (this.gameOverScreen) {
       this.gameOverScreen.destroy();
@@ -770,6 +1074,21 @@ export class GameScene extends Phaser.Scene {
       item.image.destroy();
     }
     this.parallaxItems = [];
+    // Cleanup powerup visuals
+    for (const c of this.shieldCircles) c.destroy();
+    this.shieldCircles = [];
+    for (const d of this.allyDrones) d.destroy();
+    this.allyDrones = [];
+    for (const t of this.allyTimers) t.destroy();
+    this.allyTimers = [];
+    if (this.magneticFieldRing) {
+      this.magneticFieldRing.destroy();
+      this.magneticFieldRing = null;
+    }
+    if (this.freezeOverlay) {
+      this.freezeOverlay.destroy();
+      this.freezeOverlay = null;
+    }
     this.tileSprite.destroy();
     this.children.removeAll(true);
 

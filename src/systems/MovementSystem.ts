@@ -10,6 +10,9 @@ export function movementSystem(state: GameState, delta: number): GameState {
   const slowingAuraActive = state.activePowerUps.includes('SLOW_AURA');
   const auraRadius = GameConfig.powerUps.slowingAura.radius;
   const auraSpeedMultiplier = GameConfig.powerUps.slowingAura.speedMultiplier;
+  const magneticFieldActive = state.activePowerUps.includes('MAGNETIC_FIELD');
+  const magneticRadius = GameConfig.powerUps.magneticField.radius;
+  const magneticStrength = GameConfig.powerUps.magneticField.pullStrength;
 
   for (const enemy of state.enemies) {
     if (enemy.alive) {
@@ -23,6 +26,9 @@ export function movementSystem(state: GameState, delta: number): GameState {
         let speedMultiplier = 1;
         if (slowingAuraActive && dist < auraRadius) {
           speedMultiplier = auraSpeedMultiplier;
+        }
+        if (magneticFieldActive && dist < magneticRadius) {
+          speedMultiplier += magneticStrength;
         }
         enemy.x += (dx / dist) * enemy.speed * deltaSeconds * speedMultiplier;
         enemy.y += (dy / dist) * enemy.speed * deltaSeconds * speedMultiplier;
