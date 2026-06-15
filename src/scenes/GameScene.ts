@@ -120,7 +120,7 @@ export class GameScene extends Phaser.Scene {
 
     // Ship power-up overlays (hidden until power-up active, follow player position)
     this.shipPiercing = this.add.image(p.x, p.y, 'ship-piercing');
-    this.shipPiercing.setScale(playerScale).setDepth(11).setVisible(false);
+    this.shipPiercing.setScale(playerScale * 1.3).setDepth(11).setVisible(false);
 
     this.shipExplosive = this.add.image(p.x, p.y, 'ship-explosive');
     this.shipExplosive.setScale(playerScale).setDepth(11).setVisible(false);
@@ -166,13 +166,25 @@ export class GameScene extends Phaser.Scene {
       // Dev mode: number keys activate powerups without level-up
       if (import.meta.env.DEV && !this.gameState.isPaused) {
         const powerUpId = mapDevKeyToPowerUp(event.key);
-        if (powerUpId && !this.gameState.activePowerUps.includes(powerUpId)) {
-          this.gameState.activePowerUps.push(powerUpId);
-          // Special handling for shield/ally on dev activation
+        if (powerUpId) {
+          // Shield and ally stack: add charge/ally every keypress
           if (powerUpId === 'SHIELD') {
+            if (!this.gameState.activePowerUps.includes(powerUpId)) {
+              this.gameState.activePowerUps.push(powerUpId);
+            }
             this.gameState.powerUpState.shieldCharges += 1;
-          } else if (powerUpId === 'ALLY') {
+            return;
+          }
+          if (powerUpId === 'ALLY') {
+            if (!this.gameState.activePowerUps.includes(powerUpId)) {
+              this.gameState.activePowerUps.push(powerUpId);
+            }
             this.gameState.powerUpState.allyCount += 1;
+            return;
+          }
+          // Other powerups: add only once
+          if (!this.gameState.activePowerUps.includes(powerUpId)) {
+            this.gameState.activePowerUps.push(powerUpId);
           }
           return;
         }
@@ -772,8 +784,8 @@ export class GameScene extends Phaser.Scene {
         const cfg = GameConfig.powerUps.slowingAura;
         const color = parseInt(cfg.color.slice(1), 16);
         this.auraCircle = this.add.circle(
-          gs.player.x + gs.player.width / 2,
-          gs.player.y + gs.player.height / 2,
+          gs.player.x,
+          gs.player.y,
           cfg.radius,
           color,
           cfg.alpha,
@@ -781,8 +793,8 @@ export class GameScene extends Phaser.Scene {
         this.auraCircle.setDepth(3);
       } else {
         this.auraCircle.setPosition(
-          gs.player.x + gs.player.width / 2,
-          gs.player.y + gs.player.height / 2,
+          gs.player.x,
+          gs.player.y,
         );
       }
     } else if (this.auraCircle) {
@@ -868,7 +880,7 @@ export class GameScene extends Phaser.Scene {
       // Ice wave VFX when freeze just activated
       if (!this.freezeVfxTriggered) {
         this.freezeVfxTriggered = true;
-        this.spawnIceWave(gs.player.x + gs.player.width / 2, gs.player.y + gs.player.height / 2);
+        this.spawnIceWave(gs.player.x, gs.player.y);
 
         // Background tint
         if (!this.freezeOverlay) {
@@ -939,8 +951,8 @@ export class GameScene extends Phaser.Scene {
 
     // Add circles if needed
     const radii = getShieldCircleRadii(charges, cfg.circleRadius, cfg.radiusStep);
-    const px = gs.player.x + gs.player.width / 2;
-    const py = gs.player.y + gs.player.height / 2;
+    const px = gs.player.x;
+    const py = gs.player.y;
     const color = parseInt(cfg.color.slice(1), 16);
 
     for (let i = 0; i < radii.length; i++) {
@@ -978,25 +990,36 @@ export class GameScene extends Phaser.Scene {
     const py = gs.player.y;
 
     for (let i = 0; i < targetCount; i++) {
-      const colorStr = allyCfg.colorPalette[i % allyCfg.colorPalette.length];
-      const color = parseInt(colorStr.slice(1), 16);
+      // Alternating positions: even → right, odd → left
+      const side = i % 2 === 0 ? 1 : -1;
+      const step = Math.floor(i / 2) + 1;
+      const droneX = px + side * step * allyCfg.horizontalOffset;
+      const droneY = py;
+      // Random color per drone, seeded by index
+      const hue = (i * 137 + 42) % 360;
+      const color = Phaser.Display.Color.HSLToColor(hue / 360, 0.8, 0.55).color;
 
       if (i < this.allyDrones.length) {
-        // Reposition existing drone
-        const droneX = px + (i + 1) * allyCfg.horizontalOffset;
-        this.allyDrones[i].setPosition(droneX, py);
+        this.allyDrones[i].setPosition(droneX, droneY);
       } else {
-        // Create new drone
-        const droneX = px + (i + 1) * allyCfg.horizontalOffset;
-        const container = this.add.container(droneX, py);
+        const container = this.add.container(droneX, droneY);
         container.setDepth(13);
 
-        // Drone body: small circle
-        const body = this.add.circle(0, 0, 6, color);
+        // Drone body: main circle
+        const body = this.add.circle(0, 0, 8, color);
         container.add(body);
-
-        // Drone detail: smaller rect (weapon)
-        const weapon = this.add.rectangle(0, -8, 3, 6, color);
+        // Cockpit: smaller centered circle, slightly lighter
+        const lighter = Phaser.Display.Color.ValueToColor(color).lighten(30).color;
+        const cockpit = this.add.circle(0, 0, 4, lighter);
+        container.add(cockpit);
+        // Left wing
+        const wingL = this.add.rectangle(-10, 0, 6, 3, color);
+        container.add(wingL);
+        // Right wing
+        const wingR = this.add.rectangle(10, 0, 6, 3, color);
+        container.add(wingR);
+        // Weapon barrel: small rect pointing forward (up)
+        const weapon = this.add.rectangle(0, -10, 2, 5, lighter);
         container.add(weapon);
 
         this.allyDrones.push(container);
@@ -1026,8 +1049,8 @@ export class GameScene extends Phaser.Scene {
     const cfg = GameConfig.powerUps.magneticField;
 
     if (active) {
-      const px = gs.player.x + gs.player.width / 2;
-      const py = gs.player.y + gs.player.height / 2;
+      const px = gs.player.x;
+      const py = gs.player.y;
       const color = parseInt(cfg.ringColor.slice(1), 16);
 
       if (!this.magneticFieldRing) {
