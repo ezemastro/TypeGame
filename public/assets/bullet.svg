@@ -1,26 +1,13 @@
-<svg width="12" height="24" viewBox="0 0 12 24" xmlns="http://www.w3.org/2000/svg" role="img">
-  <title>TypeBot — Bullet / Projectile</title>
-  <desc>Neon green capsule projectile with white core. Flat colors, circles and rounded rectangles only.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="12" height="24" viewBox="0 0 12 24" role="img">
+  <title>AstroType — Laser Bolt</title>
+  <desc>Cyan energy laser capsule with white hot core. Flat colors, rounded rectangles and circles only.</desc>
 
-  <style>
-    @media (prefers-reduced-motion: reduce) {
-      .bullet { animation: none !important; }
-    }
-    .bullet { animation: bulletPulse 0.3s ease-in-out infinite; }
-    @keyframes bulletPulse {
-      0%, 100% { opacity: 0.85; }
-      50%      { opacity: 1; }
-    }
-  </style>
+  <!-- Outer capsule body -->
+  <rect x="1" y="0" width="10" height="24" rx="5" fill="#00E5FF" />
 
-  <g class="bullet">
-    <!-- Outer capsule body — fills the viewBox -->
-    <rect x="1" y="0" width="10" height="24" rx="5" fill="#00E676" />
+  <!-- White energy core — runs center length -->
+  <rect x="3.5" y="4" width="5" height="16" rx="2.5" fill="#FFFFFF" opacity="0.8" />
 
-    <!-- White energy core — runs center length -->
-    <rect x="3.5" y="4" width="5" height="16" rx="2.5" fill="#FFFFFF" opacity="0.8" />
-
-    <!-- Bright tip glow -->
-    <circle cx="6" cy="2" r="2" fill="#FFFFFF" />
-  </g>
+  <!-- Bright tip glow -->
+  <circle cx="6" cy="2" r="2" fill="#FFFFFF" />
 </svg>
