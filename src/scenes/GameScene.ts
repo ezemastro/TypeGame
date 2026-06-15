@@ -433,8 +433,10 @@ export class GameScene extends Phaser.Scene {
       } else {
         proj.image.x += (dx / dist) * speed * deltaSec;
         proj.image.y += (dy / dist) * speed * deltaSec;
+        proj.image.rotation = Math.atan2(dy, dx) + Math.PI / 2;
         proj.glow.x = proj.image.x;
         proj.glow.y = proj.image.y;
+        proj.glow.rotation = proj.image.rotation;
       }
     }
   }

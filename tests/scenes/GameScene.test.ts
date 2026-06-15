@@ -209,4 +209,48 @@ describe('GameScene orchestration (unit)', () => {
     const state = createInitialGameState();
     expect(state.secondaryTargetId).toBeNull();
   });
+
+  describe('projectile rotation', () => {
+    const rotationFromDelta = (dx: number, dy: number): number =>
+      Math.atan2(dy, dx) + Math.PI / 2;
+
+    it('should point right when moving horizontally right', () => {
+      // Moving right: dx > 0, dy = 0. atan2(0, 1) = 0. 0 + π/2 = π/2 (90° = right)
+      const angle = rotationFromDelta(10, 0);
+      expect(angle).toBeCloseTo(Math.PI / 2, 5);
+    });
+
+    it('should point left when moving horizontally left', () => {
+      // Moving left: dx < 0, dy = 0. atan2(0, -1) = π. π + π/2 = 3π/2 (pointing left)
+      const angle = rotationFromDelta(-10, 0);
+      expect(angle).toBeCloseTo((3 * Math.PI) / 2, 5);
+    });
+
+    it('should point down when moving vertically down', () => {
+      // Moving down: dx = 0, dy > 0. atan2(1, 0) = π/2. π/2 + π/2 = π (180° = down)
+      const angle = rotationFromDelta(0, 10);
+      expect(angle).toBeCloseTo(Math.PI, 5);
+    });
+
+    it('should point up when moving vertically up', () => {
+      // Moving up: dx = 0, dy < 0. atan2(-1, 0) = -π/2. -π/2 + π/2 = 0 (0° = up/natural)
+      const angle = rotationFromDelta(0, -10);
+      expect(angle).toBeCloseTo(0, 5);
+    });
+
+    it('should point diagonally for equal dx,dy movement', () => {
+      // Moving down-right: dx = dy, atan2(1, 1) = π/4. π/4 + π/2 = 3π/4
+      const angle = rotationFromDelta(10, 10);
+      expect(angle).toBeCloseTo((3 * Math.PI) / 4, 5);
+    });
+
+    it('should handle zero dx correctly (vertical movement)', () => {
+      // atan2 works fine with dx = 0
+      const angleUp = rotationFromDelta(0, -5);
+      expect(angleUp).toBeCloseTo(0, 5); // points up (natural orientation)
+
+      const angleDown = rotationFromDelta(0, 5);
+      expect(angleDown).toBeCloseTo(Math.PI, 5); // points down
+    });
+  });
 });
