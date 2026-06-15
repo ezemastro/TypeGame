@@ -5,31 +5,31 @@
   <defs>
     <style>
       @keyframes walk-legs {
-        0%, 100% { transform: rotate(-12deg); }
-        50% { transform: rotate(12deg); }
+        0%, 100% { transform: rotate(-10deg); }
+        50%      { transform: rotate(10deg); }
       }
       @keyframes walk-arms {
-        0%, 100% { transform: rotate(10deg); }
-        50% { transform: rotate(-10deg); }
+        0%, 100% { transform: rotate(8deg); }
+        50%      { transform: rotate(-8deg); }
       }
       @keyframes bounce {
         0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-2px); }
+        50%      { transform: translateY(-2px); }
       }
       @keyframes antenna-sway {
         0%, 100% { transform: rotate(-4deg); }
-        50% { transform: rotate(4deg); }
+        50%      { transform: rotate(4deg); }
       }
       @keyframes pulse {
-        0%, 100% { opacity: 0.5; }
-        50% { opacity: 1; }
+        0%, 100% { opacity: 0.35; }
+        50%      { opacity: 1; }
       }
       .robot-group { animation: bounce 0.5s ease-in-out infinite; }
-      .leg-left { animation: walk-legs 0.4s ease-in-out infinite; transform-origin: 27px 54px; }
-      .leg-right { animation: walk-legs 0.4s ease-in-out infinite alternate; transform-origin: 37px 54px; }
-      .arm-left { animation: walk-arms 0.4s ease-in-out infinite; transform-origin: 17px 36px; }
-      .arm-right { animation: walk-arms 0.4s ease-in-out infinite alternate; transform-origin: 48px 36px; }
-      .antenna { animation: antenna-sway 1.2s ease-in-out infinite; transform-origin: 32px 14px; }
+      .leg-left  { animation: walk-legs 0.4s ease-in-out infinite;           transform-origin: 22px 56px; }
+      .leg-right { animation: walk-legs 0.4s ease-in-out infinite alternate; transform-origin: 42px 56px; }
+      .arm-left  { animation: walk-arms 0.4s ease-in-out infinite;           transform-origin: 8px 38px; }
+      .arm-right { animation: walk-arms 0.4s ease-in-out infinite alternate; transform-origin: 54px 38px; }
+      .antenna   { animation: antenna-sway 1.2s ease-in-out infinite;        transform-origin: 32px 12px; }
       .core-glow { animation: pulse 1.5s ease-in-out infinite; }
       @media (prefers-reduced-motion: reduce) {
         .robot-group, .leg-left, .leg-right, .arm-left, .arm-right, .antenna, .core-glow { animation: none; }
@@ -38,63 +38,74 @@
   </defs>
 
   <g class="robot-group">
-    <!-- Shadow on ground -->
-    <ellipse cx="32" cy="72" rx="18" ry="5" fill="#000" opacity="0.18"/>
+    <!-- Ground shadow -->
+    <ellipse cx="32" cy="74" rx="16" ry="4" fill="#000" opacity="0.12"/>
 
-    <!-- Legs -->
+    <!-- ===== LEGS ===== -->
     <g class="leg-left">
-      <rect x="23" y="56" width="10" height="14" rx="4" fill="#00C853"/>
-      <rect x="25" y="66" width="6" height="6" rx="2" fill="#009624"/>
+      <rect x="17" y="56" width="10" height="14" rx="3" fill="#00C853"/>
+      <rect x="19" y="66" width="6" height="5" rx="2" fill="#00B248"/>
     </g>
     <g class="leg-right">
-      <rect x="31" y="56" width="10" height="14" rx="4" fill="#00C853"/>
-      <rect x="33" y="66" width="6" height="6" rx="2" fill="#009624"/>
+      <rect x="37" y="56" width="10" height="14" rx="3" fill="#00C853"/>
+      <rect x="39" y="66" width="6" height="5" rx="2" fill="#00B248"/>
     </g>
 
-    <!-- Body (back view — wider at top, narrower at waist) -->
-    <path d="M 16 32 L 14 54 L 50 54 L 48 32 Z" fill="#00E676" rx="4"/>
-    <!-- Body panel lines (back details) -->
-    <line x1="20" y1="40" x2="44" y2="40" stroke="#00C853" stroke-width="1.5" opacity="0.6"/>
-    <line x1="22" y1="46" x2="42" y2="46" stroke="#00C853" stroke-width="1" opacity="0.4"/>
-    <!-- Central spine/vent -->
-    <rect x="30" y="38" width="4" height="12" rx="2" fill="#00C853" opacity="0.5"/>
-    <!-- Core glow (back power core) -->
-    <circle cx="32" cy="42" r="6" fill="#00E5FF" opacity="0.4" class="core-glow"/>
-    <circle cx="32" cy="42" r="3" fill="#00E5FF" opacity="0.7" class="core-glow"/>
+    <!-- ===== BODY ===== -->
+    <!-- Main body (back view — rectangular with rounded corners) -->
+    <rect x="12" y="36" width="40" height="22" rx="5" fill="#00E676"/>
 
-    <!-- Arms -->
+    <!-- Back panel inner border -->
+    <rect x="18" y="40" width="28" height="12" rx="3" fill="none" stroke="#00C853" stroke-width="1.5" opacity="0.55"/>
+
+    <!-- Horizontal panel seam lines -->
+    <line x1="20" y1="43" x2="44" y2="43" stroke="#00C853" stroke-width="1" opacity="0.35"/>
+    <line x1="21" y1="47" x2="43" y2="47" stroke="#00C853" stroke-width="1" opacity="0.25"/>
+
+    <!-- Central spine vent (back detail) -->
+    <rect x="30" y="38" width="4" height="16" rx="2" fill="#00C853" opacity="0.45"/>
+
+    <!-- Back power core (cyan glow) -->
+    <circle cx="32" cy="44" r="5" fill="#00E5FF" opacity="0.35" class="core-glow"/>
+    <circle cx="32" cy="44" r="2.5" fill="#00E5FF" opacity="0.7" class="core-glow"/>
+
+    <!-- ===== ARMS ===== -->
     <g class="arm-left">
-      <rect x="12" y="32" width="8" height="16" rx="3" fill="#00C853"/>
-      <circle cx="16" cy="49" r="4" fill="#00E676"/>
+      <rect x="4" y="38" width="8" height="18" rx="3" fill="#00C853"/>
+      <circle cx="8" cy="57" r="3" fill="#00E676"/>
     </g>
     <g class="arm-right">
-      <!-- Right arm holds weapon -->
-      <rect x="41" y="32" width="8" height="16" rx="3" fill="#00C853"/>
-      <!-- Weapon in right hand -->
-      <g transform="translate(49, 44) rotate(-30)">
-        <rect x="0" y="-3" width="20" height="6" rx="2" fill="#78909C"/>
-        <rect x="18" y="-4" width="4" height="8" rx="1" fill="#546E7A"/>
-        <circle cx="20" cy="0" r="2.5" fill="#00E676"/>
+      <rect x="50" y="38" width="8" height="18" rx="3" fill="#00C853"/>
+      <!-- Weapon held in right hand, pointing upward -->
+      <g transform="translate(58, 44) rotate(-70)">
+        <!-- Barrel -->
+        <rect x="0" y="-2" width="10" height="4" rx="1.5" fill="#78909C"/>
+        <!-- Muzzle tip -->
+        <rect x="9" y="-3" width="3" height="6" rx="1" fill="#546E7A"/>
+        <!-- Energy glow at muzzle -->
+        <circle cx="11" cy="0" r="2" fill="#00E676"/>
       </g>
     </g>
 
-    <!-- Head (back view — round with panel details) -->
-    <circle cx="32" cy="20" r="14" fill="#00E676"/>
-    <!-- Head back panel -->
-    <circle cx="32" cy="20" r="10" fill="#00C853" opacity="0.3"/>
-    <!-- Head vents -->
-    <rect x="26" y="16" width="3" height="8" rx="1.5" fill="#009624" opacity="0.4"/>
-    <rect x="31" y="16" width="3" height="8" rx="1.5" fill="#009624" opacity="0.4"/>
-    <rect x="36" y="16" width="3" height="8" rx="1.5" fill="#009624" opacity="0.4"/>
+    <!-- ===== SHOULDER PADS (back accents) ===== -->
+    <rect x="8" y="36" width="10" height="6" rx="2" fill="#00B248"/>
+    <rect x="46" y="36" width="10" height="6" rx="2" fill="#00B248"/>
 
-    <!-- Antenna -->
+    <!-- ===== HEAD (back view — NO face) ===== -->
+    <circle cx="32" cy="26" r="14" fill="#00E676"/>
+
+    <!-- Back head panel (darker inner circle) -->
+    <circle cx="32" cy="26" r="10" fill="#00C853" opacity="0.22"/>
+
+    <!-- Head vents (back of head — three vertical slots) -->
+    <rect x="26" y="21" width="3" height="6" rx="1.5" fill="#00B248" opacity="0.35"/>
+    <rect x="31" y="21" width="3" height="6" rx="1.5" fill="#00B248" opacity="0.35"/>
+    <rect x="36" y="21" width="3" height="6" rx="1.5" fill="#00B248" opacity="0.35"/>
+
+    <!-- ===== ANTENNA ===== -->
     <g class="antenna">
-      <line x1="32" y1="6" x2="32" y2="0" stroke="#00E676" stroke-width="2" stroke-linecap="round"/>
-      <circle cx="32" cy="-1" r="3" fill="#00E5FF"/>
+      <line x1="32" y1="12" x2="32" y2="6" stroke="#00E676" stroke-width="2" stroke-linecap="round"/>
+      <circle cx="32" cy="4" r="3" fill="#00E5FF"/>
     </g>
-
-    <!-- Shoulder pads (back view accents) -->
-    <rect x="13" y="30" width="10" height="6" rx="3" fill="#00B248"/>
-    <rect x="41" y="30" width="10" height="6" rx="3" fill="#00B248"/>
   </g>
 </svg>

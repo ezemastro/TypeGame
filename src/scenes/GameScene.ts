@@ -161,11 +161,11 @@ export class GameScene extends Phaser.Scene {
     const scrollSpeed = GameConfig.world.scrollSpeed;
     this.tileSprite.tilePositionY -= scrollSpeed * (delta / 1000);
 
-    // Parallax movement — items drift upward (world scrolls toward player @ bottom)
+    // Parallax movement — trees/clouds move toward player (same direction as tile)
     for (const item of this.parallaxItems) {
-      item.image.y -= scrollSpeed * item.speed * (delta / 1000);
-      if (item.image.y < -60) {
-        item.image.y = GameConfig.canvas.height + 60;
+      item.image.y += scrollSpeed * item.speed * (delta / 1000);
+      if (item.image.y > GameConfig.canvas.height + 60) {
+        item.image.y = -60;
         item.image.x = Phaser.Math.Between(20, GameConfig.canvas.width - 20);
       }
     }
@@ -380,6 +380,18 @@ export class GameScene extends Phaser.Scene {
         img.setDisplaySize(enemy.width, enemy.height);
         img.setDepth(5);
 
+        // Dark background behind word text for readability
+        // Created BEFORE text so text renders on top (depth: bg=5, text=6)
+        const textBg = this.add.rectangle(
+          enemy.x,
+          enemy.y - enemy.height / 2 - 10,
+          0,  // initial width — resized after text is measured
+          18,
+          0x000000,
+          0.5,
+        );
+        textBg.setDepth(5);
+
         const text = this.add.text(
           enemy.x,
           enemy.y - enemy.height / 2 - 10,
@@ -391,30 +403,55 @@ export class GameScene extends Phaser.Scene {
           },
         );
         text.setOrigin(0.5, 1); // center horizontally, bottom-aligned
+        text.setDepth(6);
 
-        // Dark background behind word text for readability
-        const textBg = this.add.rectangle(
-          enemy.x,
-          enemy.y - enemy.height / 2 - 10,
-          text.width + 8,
-          18,
-          0x000000,
-          0.5,
-        );
-        textBg.setDepth(5);
+        // Size background to match the measured text
+        textBg.setSize(text.width + 8, 18);
 
         render = { image: img, text, textBg };
         this.enemyRenderMap.set(enemy.id, render);
 
-        // Subtle sway tween per enemy (CSS animations lost in Canvas2D)
-        this.tweens.add({
-          targets: img,
-          angle: { from: -3, to: 3 },
-          duration: 600 + Math.random() * 400,
-          yoyo: true,
-          repeat: -1,
-          ease: 'Sine.easeInOut',
-        });
+        // Texture-specific tween animations (CSS animations lost in Canvas2D)
+        if (textureKey === 'enemy-bug') {
+          // Wing flutter: quick scale oscillation on Y axis
+          this.tweens.add({
+            targets: img,
+            scaleY: { from: 1, to: 0.85 },
+            duration: 200,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+          // Bounce: vertical oscillation
+          this.tweens.add({
+            targets: img,
+            y: enemy.y - 3,
+            duration: 300,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+        } else {
+          // Robot: scale pulse — breathing/menacing feel
+          this.tweens.add({
+            targets: img,
+            scaleX: { from: 1, to: 1.1 },
+            scaleY: { from: 1, to: 0.9 },
+            duration: 600,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+          // Slower sway (±3° rotation over 1.5s cycle)
+          this.tweens.add({
+            targets: img,
+            angle: { from: -3, to: 3 },
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut',
+          });
+        }
       }
 
       render.image.setPosition(enemy.x, enemy.y);
