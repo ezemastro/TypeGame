@@ -28,7 +28,7 @@ interface ProjectileRender {
   targetId: number;
 }
 
-type ParallaxType = 'cloud' | 'ground';
+type ParallaxType = 'nebula' | 'ground';
 
 interface ParallaxItem {
   image: Phaser.GameObjects.Image;
@@ -78,7 +78,7 @@ export class GameScene extends Phaser.Scene {
       GameConfig.canvas.height / 2,
       GameConfig.canvas.width,
       GameConfig.canvas.height,
-      'tile-floor',
+      'starfield',
     );
     this.tileSprite.setDepth(0);
 
@@ -138,7 +138,7 @@ export class GameScene extends Phaser.Scene {
    * further-away ones. Clouds stay in [1.0, ~1.5], ground decor in [2.0, 4.0].
    */
   private depthFromY(y: number, type: ParallaxType): number {
-    if (type === 'cloud') {
+    if (type === 'nebula') {
       // y range roughly -40..340; map to 1.0..1.5
       return 1.0 + ((y + 40) / 380) * 0.5;
     }
@@ -149,7 +149,7 @@ export class GameScene extends Phaser.Scene {
   private spawnParallaxItems(): void {
     // Ground elements — trees, rocks, bushes
     // Place them in left/right thirds only, never in the center lane (player path)
-    const textures: Array<'tree' | 'rock' | 'bush'> = ['tree', 'rock', 'bush'];
+    const textures: Array<'planet' | 'meteorite' | 'asteroid'> = ['planet', 'meteorite', 'asteroid'];
     const groundCount = 10;
     const laneMargin = 140; // keep this far from center on each side
     const centerX = GameConfig.canvas.width / 2;
@@ -202,7 +202,7 @@ export class GameScene extends Phaser.Scene {
     const scrollSpeed = GameConfig.world.scrollSpeed;
     this.tileSprite.tilePositionY -= scrollSpeed * (delta / 1000);
 
-    // Parallax movement — trees/rocks/bushes move toward player, clouds drift slowly
+    // Parallax movement — planets, meteorites, asteroids move toward player, nebulas drift slowly
     const groundLaneMargin = 140;
     const groundCenterX = GameConfig.canvas.width / 2;
     const groundLeftMax = groundCenterX - groundLaneMargin;
@@ -211,7 +211,7 @@ export class GameScene extends Phaser.Scene {
     for (const item of this.parallaxItems) {
       item.image.y += scrollSpeed * item.speed * (delta / 1000);
       if (item.image.y > GameConfig.canvas.height + 80) {
-        item.image.y = item.type === 'cloud' ? -40 : -80;
+        item.image.y = item.type === 'nebula' ? -40 : -80;
         // Keep ground items off the center lane on wrap-around too
         if (item.type === 'ground') {
           item.image.x = Math.random() > 0.5
@@ -298,9 +298,9 @@ export class GameScene extends Phaser.Scene {
     const originX = p.x;
     const originY = p.y - p.height / 2;
 
-    // Fallback: if bullet texture fails, create a bright green rounded rectangle
-    if (!this.textures.exists('bullet')) {
-      const glow = this.add.circle(originX, originY, texW * 1.2, 0x00ff88, 0.3);
+    // Fallback: if laser texture fails, create a cyan energy bolt
+    if (!this.textures.exists('laser')) {
+      const glow = this.add.circle(originX, originY, texW * 1.2, 0x00E5FF, 0.3);
       glow.setDepth(14);
       const rect = this.add.circle(originX, originY, texW * 0.6, 0xffffff);
       rect.setDisplaySize(texW, texH);
@@ -313,14 +313,14 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Glow: larger, semi-transparent copy behind the bullet
-    const glow = this.add.image(originX, originY, 'bullet');
+    // Glow: larger, semi-transparent copy behind the laser
+    const glow = this.add.image(originX, originY, 'laser');
     glow.setDisplaySize(texW * 1.6, texH * 1.3);
     glow.setAlpha(0.25);
-    glow.setTint(0x00ff88);
+    glow.setTint(0x00E5FF);
     glow.setDepth(14);
 
-    const img = this.add.image(originX, originY, 'bullet');
+    const img = this.add.image(originX, originY, 'laser');
     img.setDisplaySize(texW, texH);
     img.setScale(0.8);
     img.setDepth(15);
@@ -338,9 +338,9 @@ export class GameScene extends Phaser.Scene {
     const originX = p.x + 8;
     const originY = p.y - p.height / 2;
 
-    // Fallback: if bullet texture fails, create a bright green rounded rectangle
-    if (!this.textures.exists('bullet')) {
-      const glow = this.add.circle(originX, originY, texW * 1.2, 0x00ff88, 0.3);
+    // Fallback: if laser texture fails, create a cyan energy bolt
+    if (!this.textures.exists('laser')) {
+      const glow = this.add.circle(originX, originY, texW * 1.2, 0x00E5FF, 0.3);
       glow.setDepth(14);
       const rect = this.add.circle(originX, originY, texW * 0.6, 0xffffff);
       rect.setDisplaySize(texW, texH);
@@ -353,14 +353,14 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Glow: larger, semi-transparent copy behind the bullet
-    const glow = this.add.image(originX, originY, 'bullet');
+    // Glow: larger, semi-transparent copy behind the laser
+    const glow = this.add.image(originX, originY, 'laser');
     glow.setDisplaySize(texW * 1.6, texH * 1.3);
     glow.setAlpha(0.25);
-    glow.setTint(0x00ff88);
+    glow.setTint(0x00E5FF);
     glow.setDepth(14);
 
-    const img = this.add.image(originX, originY, 'bullet');
+    const img = this.add.image(originX, originY, 'laser');
     img.setDisplaySize(texW, texH);
     img.setScale(0.8);
     img.setDepth(15);
@@ -398,7 +398,7 @@ export class GameScene extends Phaser.Scene {
         if (target.pendingDestruction) {
           target.alive = false;
           this.gameState.gearDropped = true;
-          this.spawnGear(target.x, target.y);
+          this.spawnStar(target.x, target.y);
         }
         proj.image.destroy();
         proj.glow.destroy();
@@ -412,20 +412,20 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private spawnGear(x: number, y: number): void {
-    const gear = this.add.image(x, y, 'gear');
-    gear.setDisplaySize(20, 20);
-    gear.setDepth(8);
+  private spawnStar(x: number, y: number): void {
+    const star = this.add.image(x, y, 'star');
+    star.setDisplaySize(20, 20);
+    star.setDepth(8);
     // Continuous rotation (CSS animations lost in Canvas2D)
     this.tweens.add({
-      targets: gear,
+      targets: star,
       angle: 360,
       duration: 2000,
       repeat: -1,
     });
     // Float up and fade out
     this.tweens.add({
-      targets: gear,
+      targets: star,
       y: y - 25,
       alpha: 0,
       scaleX: 0.2,

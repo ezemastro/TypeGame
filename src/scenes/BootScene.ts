@@ -10,14 +10,14 @@ export class BootScene extends Phaser.Scene {
     this.load.image('robot', 'assets/robot.svg');
     this.load.image('enemy-robot', 'assets/enemy-robot.svg');
     this.load.image('enemy-bug', 'assets/enemy-bug.svg');
-    this.load.image('tile-floor', 'assets/tile-floor.svg');
-    this.load.image('gear', 'assets/gear.svg');
+    this.load.image('starfield', 'assets/starfield.svg');
+    this.load.image('star', 'assets/star.svg');
     this.load.image('weapon-base', 'assets/weapon-base.svg');
-    this.load.image('bullet', 'assets/bullet.svg');
-    this.load.image('tree', 'assets/tree.svg');
-    this.load.image('rock', 'assets/rock.svg');
-    this.load.image('bush', 'assets/bush.svg');
-    this.load.image('cloud', 'assets/cloud.svg');
+    this.load.image('laser', 'assets/laser.svg');
+    this.load.image('planet', 'assets/planet.svg');
+    this.load.image('meteorite', 'assets/meteorite.svg');
+    this.load.image('asteroid', 'assets/asteroid.svg');
+    this.load.image('nebula', 'assets/nebula.svg');
   }
 
   create(): void {

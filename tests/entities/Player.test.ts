@@ -27,7 +27,7 @@ describe('PlayerState', () => {
 
   it('should have color from GameConfig', () => {
     const player = createPlayer();
-    expect(player.color).toBe('#00ff88');
+    expect(player.color).toBe('#00E5FF');
   });
 
   it('should produce a PlayerState that matches the interface contract', () => {

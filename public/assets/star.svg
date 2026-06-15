@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" role="img">
+  <title>AstroType — Energy Star Collectible</title>
+  <desc>Golden 4-pointed star with spikes tangent to center. Flat colors, built from rounded rectangles and circles. Collected when enemies are destroyed.</desc>
+
+  <!-- Four spikes rotated 45° for diagonal star shape -->
+  <g transform="rotate(45, 16, 16)">
+    <rect x="14" y="1" width="4" height="8" rx="1" fill="#FFD740" />
+    <rect x="23" y="14" width="4" height="8" rx="1" fill="#FFD740" />
+    <rect x="14" y="23" width="4" height="8" rx="1" fill="#FFD740" />
+    <rect x="5" y="14" width="4" height="8" rx="1" fill="#FFD740" />
+  </g>
+
+  <!-- Center body -->
+  <circle cx="16" cy="16" r="7" fill="#FFD740" />
+
+  <!-- Inner glow -->
+  <circle cx="16" cy="16" r="4" fill="#FFE57F" />
+
+  <!-- Specular highlight (top-left light source, stays unrotated) -->
+  <circle cx="14" cy="14" r="2.5" fill="#FFFFFF" opacity="0.5" />
+</svg>

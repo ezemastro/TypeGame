@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="56" viewBox="0 0 72 56" role="img">
+  <title>AstroType — Floating Asteroids</title>
+  <desc>Three individual asteroids floating in space. Geometric circles with craters and highlights. Parallax background.</desc>
+
+  <!-- Asteroid 1 (largest, left) -->
+  <circle cx="18" cy="20" r="14" fill="#757575" />
+  <circle cx="22" cy="16" r="3.5" fill="#616161" opacity="0.45" />
+  <circle cx="14" cy="26" r="2.5" fill="#616161" opacity="0.35" />
+  <circle cx="14" cy="15" r="5" fill="#9E9E9E" opacity="0.3" />
+
+  <!-- Asteroid 2 (medium, lower-right) -->
+  <circle cx="48" cy="38" r="11" fill="#9E9E9E" />
+  <circle cx="50" cy="35" r="3" fill="#616161" opacity="0.4" />
+  <circle cx="44" cy="42" r="2" fill="#616161" opacity="0.35" />
+  <circle cx="45" cy="33" r="4" fill="#BDBDBD" opacity="0.3" />
+
+  <!-- Asteroid 3 (small, top-right) -->
+  <circle cx="56" cy="12" r="8" fill="#757575" />
+  <circle cx="58" cy="10" r="2.5" fill="#616161" opacity="0.4" />
+  <circle cx="54" cy="9" r="3" fill="#9E9E9E" opacity="0.3" />
+</svg>

@@ -3,14 +3,14 @@ export const GameConfig = Object.freeze({
   canvas: {
     width: 800,
     height: 600,
-    backgroundColor: '#2C3A14',
+    backgroundColor: '#0B0E2A',
   },
 
-  // Player (Robot)
+  // Player (Spaceship)
   player: {
     width: 50,
     height: 50,
-    color: '#00ff88',
+    color: '#00E5FF',
     x: 400,       // starting X (center)
     y: 500,       // bottom area
     speed: 300,   // pixels per second
@@ -45,7 +45,7 @@ export const GameConfig = Object.freeze({
   shooting: {
     cooldown: 200,       // ms between shots
     projectileSpeed: 600,
-    projectileColor: '#00ff88',
+    projectileColor: '#00E5FF',
     projectileWidth: 8,
     projectileHeight: 24,
   },
