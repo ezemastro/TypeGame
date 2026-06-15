@@ -15,6 +15,11 @@ export class BootScene extends Phaser.Scene {
     this.load.image('starfield', 'assets/starfield.svg');
     this.load.image('star', 'assets/star.svg');
     this.load.image('weapon-base', 'assets/weapon-base.svg');
+    this.load.image('weapon-piercing', 'assets/weapon-piercing.svg');
+    this.load.image('weapon-explosive', 'assets/weapon-explosive.svg');
+    this.load.image('weapon-dual', 'assets/weapon-dual.svg');
+    this.load.image('weapon-cooling', 'assets/weapon-cooling.svg');
+    this.load.image('weapon-sight', 'assets/weapon-sight.svg');
     this.load.image('laser', 'assets/laser.svg');
     this.load.image('planet', 'assets/planet.svg');
     this.load.image('planet-ice', 'assets/planet-ice.svg');

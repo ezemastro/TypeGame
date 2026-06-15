@@ -49,6 +49,11 @@ export class GameScene extends Phaser.Scene {
   private tileSprite!: Phaser.GameObjects.TileSprite;
   private parallaxItems: ParallaxItem[] = [];
   private weaponImage!: Phaser.GameObjects.Image;
+  private weaponPiercing!: Phaser.GameObjects.Image;
+  private weaponExplosive!: Phaser.GameObjects.Image;
+  private weaponDual!: Phaser.GameObjects.Image;
+  private weaponCooling!: Phaser.GameObjects.Image;
+  private weaponSight!: Phaser.GameObjects.Image;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -102,14 +107,29 @@ export class GameScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
-    // Weapon HUD (top-right)
-    this.weaponImage = this.add.image(
-      GameConfig.canvas.width - 50, 28,
-      'weapon-base',
-    );
+    // Weapon HUD (top-right, modular layers)
+    const weaponX = GameConfig.canvas.width - 50;
+    const weaponY = 28;
+    this.weaponImage = this.add.image(weaponX, weaponY, 'weapon-base');
     this.weaponImage.setScrollFactor(0);
     this.weaponImage.setDepth(100);
     this.weaponImage.setScale(0.8);
+
+    // Weapon overlays (hidden until power-up active)
+    this.weaponPiercing = this.add.image(weaponX, weaponY, 'weapon-piercing');
+    this.weaponPiercing.setScrollFactor(0).setDepth(101).setScale(0.8).setVisible(false);
+
+    this.weaponExplosive = this.add.image(weaponX, weaponY, 'weapon-explosive');
+    this.weaponExplosive.setScrollFactor(0).setDepth(101).setScale(0.8).setVisible(false);
+
+    this.weaponDual = this.add.image(weaponX, weaponY, 'weapon-dual');
+    this.weaponDual.setScrollFactor(0).setDepth(101).setScale(0.8).setVisible(false);
+
+    this.weaponCooling = this.add.image(weaponX, weaponY, 'weapon-cooling');
+    this.weaponCooling.setScrollFactor(0).setDepth(101).setScale(0.8).setVisible(false);
+
+    this.weaponSight = this.add.image(weaponX, weaponY, 'weapon-sight');
+    this.weaponSight.setScrollFactor(0).setDepth(101).setScale(0.8).setVisible(false);
 
     // HUD
     this.hud = createHUD(this);
@@ -196,6 +216,7 @@ export class GameScene extends Phaser.Scene {
         });
       }
       this.syncAuraRendering();
+      this.syncWeaponRendering();
       this.syncRendering();
       this.hud.update(gs);
       return;
@@ -402,6 +423,10 @@ export class GameScene extends Phaser.Scene {
           target.alive = false;
           this.gameState.gearDropped = true;
           this.spawnStar(target.x, target.y);
+          // Explosive Impact VFX
+          if (this.gameState.activePowerUps.includes('EXPLOSIVE_IMPACT')) {
+            this.spawnExplosion(target.x, target.y);
+          }
         }
         proj.image.destroy();
         proj.glow.destroy();
@@ -633,6 +658,28 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private syncWeaponRendering(): void {
+    const gs = this.gameState;
+    this.weaponPiercing.setVisible(gs.activePowerUps.includes('PIERCING_SHOT'));
+    this.weaponExplosive.setVisible(gs.activePowerUps.includes('EXPLOSIVE_IMPACT'));
+    this.weaponDual.setVisible(gs.activePowerUps.includes('DUAL_SHOT'));
+    this.weaponCooling.setVisible(gs.activePowerUps.includes('QUICK_COOLING'));
+    this.weaponSight.setVisible(gs.activePowerUps.includes('SHARP_SIGHT'));
+  }
+
+  private spawnExplosion(x: number, y: number): void {
+    const circle = this.add.circle(x, y, 10, 0xFF5252, 0.6);
+    circle.setDepth(20);
+    this.tweens.add({
+      targets: circle,
+      radius: 80,
+      alpha: 0,
+      duration: 300,
+      ease: 'Power2',
+      onComplete: () => circle.destroy(),
+    });
+  }
+
   private restartGame(): void {
     if (this.gameOverScreen) {
       this.gameOverScreen.destroy();
@@ -661,6 +708,11 @@ export class GameScene extends Phaser.Scene {
     this.parallaxItems = [];
     this.tileSprite.destroy();
     this.weaponImage.destroy();
+    this.weaponPiercing.destroy();
+    this.weaponExplosive.destroy();
+    this.weaponDual.destroy();
+    this.weaponCooling.destroy();
+    this.weaponSight.destroy();
     this.children.removeAll(true);
 
     this.create();

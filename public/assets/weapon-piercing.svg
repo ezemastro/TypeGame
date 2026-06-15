@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" viewBox="0 0 80 40" role="img">
+  <title>AstroType — Piercing Barrel Extension</title>
+  <desc>Cyan extended barrel for Piercing Shot power-up. Overlays on weapon-base HUD. Static.</desc>
+
+  <!-- Extended barrel piece -->
+  <rect x="68" y="14" width="20" height="12" rx="3" fill="#00E5FF" />
+  <rect x="84" y="15" width="6" height="10" rx="2" fill="#00B8D4" />
+</svg>

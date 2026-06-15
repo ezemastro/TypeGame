@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" viewBox="0 0 80 40" role="img">
+  <title>AstroType — Dual Barrel</title>
+  <desc>Second cannon barrel for Dual Shot power-up. Overlays below main weapon on HUD. Static.</desc>
+
+  <!-- Second barrel positioned below main -->
+  <rect x="14" y="28" width="56" height="10" rx="3" fill="#607D8B" />
+
+  <!-- Second muzzle glow -->
+  <circle cx="70" cy="33" r="4" fill="#00E5FF" opacity="0.2" />
+
+  <!-- Second muzzle ring -->
+  <circle cx="70" cy="33" r="3" fill="none" stroke="#00E5FF" stroke-width="1" />
+  <circle cx="70" cy="33" r="1.5" fill="#FFFFFF" />
+
+  <!-- Detail lines -->
+  <rect x="28" y="29" width="1" height="8" rx="0.5" fill="#90A4AE" opacity="0.4" />
+  <rect x="44" y="29" width="1" height="8" rx="0.5" fill="#90A4AE" opacity="0.4" />
+</svg>

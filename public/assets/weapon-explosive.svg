@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40" viewBox="0 0 80 40" role="img">
+  <title>AstroType — Explosive Module</title>
+  <desc>Red explosive ring on muzzle for Explosive Impact power-up. Overlays on weapon HUD. Static.</desc>
+
+  <!-- Outer red glow -->
+  <circle cx="70" cy="20" r="10" fill="#FF5252" opacity="0.3" />
+
+  <!-- Inner ring -->
+  <circle cx="70" cy="20" r="6" fill="none" stroke="#FF5252" stroke-width="2" />
+
+  <!-- Core dot -->
+  <circle cx="70" cy="20" r="2" fill="#FF1744" />
+</svg>
