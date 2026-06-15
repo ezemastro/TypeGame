@@ -209,6 +209,8 @@ export class GameScene extends Phaser.Scene {
           }
           this.levelUpScreen = null;
           this.tweens.timeScale = 1;
+          // Force immediate visual sync for the new power-up
+          this.syncShipRendering();
         });
       }
       this.syncAuraRendering();
@@ -303,6 +305,7 @@ export class GameScene extends Phaser.Scene {
 
     this.updateProjectiles(delta);
     this.syncAuraRendering();
+    this.syncShipRendering();
     this.syncRendering();
     this.hud.update(gs);
 
