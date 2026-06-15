@@ -17,18 +17,23 @@ import { showLevelUp, type LevelUpScreen } from '../ui/LevelUpScreen';
 import { GameConfig } from '../config';
 
 interface EnemyRender {
-  rect: Phaser.GameObjects.Rectangle;
+  image: Phaser.GameObjects.Image;
   text: Phaser.GameObjects.Text;
 }
 
 interface ProjectileRender {
-  graphic: Phaser.GameObjects.Rectangle;
+  image: Phaser.GameObjects.Image;
   targetId: number;
+}
+
+interface ParallaxItem {
+  image: Phaser.GameObjects.Image;
+  speed: number;
 }
 
 export class GameScene extends Phaser.Scene {
   private gameState!: GameState;
-  private playerRect!: Phaser.GameObjects.Rectangle;
+  private playerImage!: Phaser.GameObjects.Image;
   private enemyRenderMap: Map<number, EnemyRender> = new Map();
   private projectiles: ProjectileRender[] = [];
   private hud!: HUD;
@@ -36,13 +41,16 @@ export class GameScene extends Phaser.Scene {
   private levelUpScreen: LevelUpScreen | null = null;
   private keyHandler?: (event: KeyboardEvent) => void;
   private auraCircle: Phaser.GameObjects.Arc | null = null;
+  private tileSprite!: Phaser.GameObjects.TileSprite;
+  private parallaxItems: ParallaxItem[] = [];
+  private weaponImage!: Phaser.GameObjects.Image;
 
   constructor() {
     super({ key: 'GameScene' });
   }
 
   preload(): void {
-    // No assets to load for MVP (colored rectangles only)
+    // Assets loaded in BootScene
   }
 
   create(): void {
@@ -50,21 +58,44 @@ export class GameScene extends Phaser.Scene {
     this.gameState.player = createPlayer();
     this.enemyRenderMap = new Map();
     this.projectiles = [];
+    this.parallaxItems = [];
     this.gameOverScreen = null;
     this.levelUpScreen = null;
     this.auraCircle = null;
 
-    // Player rectangle
-    const p = this.gameState.player;
-    this.playerRect = this.add.rectangle(
-      p.x, p.y, p.width, p.height,
-      parseInt(p.color.slice(1), 16),
+    // Background tile (scrolling floor)
+    this.tileSprite = this.add.tileSprite(
+      GameConfig.canvas.width / 2,
+      GameConfig.canvas.height / 2,
+      GameConfig.canvas.width,
+      GameConfig.canvas.height,
+      'tile-floor',
     );
+    this.tileSprite.setDepth(0);
+
+    // Parallax trees
+    this.spawnParallaxItems();
+    this.spawnParallaxClouds();
+
+    // Player image
+    const p = this.gameState.player;
+    this.playerImage = this.add.image(p.x, p.y, 'robot');
+    this.playerImage.setDisplaySize(p.width, p.height);
+    this.playerImage.setDepth(10);
+
+    // Weapon HUD (top-right)
+    this.weaponImage = this.add.image(
+      GameConfig.canvas.width - 50, 28,
+      'weapon-base',
+    );
+    this.weaponImage.setScrollFactor(0);
+    this.weaponImage.setDepth(100);
+    this.weaponImage.setScale(0.8);
 
     // HUD
     this.hud = createHUD(this);
 
-    // Keyboard input — remove old listener before re-adding (prevents leaks on restart)
+    // Keyboard input
     if (this.keyHandler) {
       this.input.keyboard!.off('keydown', this.keyHandler);
     }
@@ -75,7 +106,6 @@ export class GameScene extends Phaser.Scene {
         }
         return;
       }
-      // Don't capture letters while paused (level-up screen handles 1/2/3)
       if (this.gameState.isPaused) return;
       if (event.key.length === 1 && /^[A-Za-z]$/.test(event.key)) {
         this.gameState.pendingKeys.push(event.key.toUpperCase());
@@ -84,14 +114,53 @@ export class GameScene extends Phaser.Scene {
     this.input.keyboard!.on('keydown', this.keyHandler);
   }
 
+  private spawnParallaxItems(): void {
+    for (let i = 0; i < 4; i++) {
+      const tree = this.add.image(
+        Phaser.Math.Between(40, GameConfig.canvas.width - 40),
+        Phaser.Math.Between(-100, GameConfig.canvas.height),
+        'tree',
+      );
+      tree.setDepth(1);
+      tree.setScale(Phaser.Math.FloatBetween(0.5, 0.8));
+      this.parallaxItems.push({ image: tree, speed: 1 });
+    }
+  }
+
+  private spawnParallaxClouds(): void {
+    for (let i = 0; i < 3; i++) {
+      const cloud = this.add.image(
+        Phaser.Math.Between(30, GameConfig.canvas.width - 30),
+        Phaser.Math.Between(-80, GameConfig.canvas.height / 2),
+        'cloud',
+      );
+      cloud.setDepth(0);
+      cloud.setAlpha(0.5);
+      cloud.setScale(Phaser.Math.FloatBetween(0.4, 0.7));
+      this.parallaxItems.push({ image: cloud, speed: 0.3 });
+    }
+  }
+
   update(_time: number, delta: number): void {
     if (this.gameState.gameOver) return;
 
     const gs = this.gameState;
 
+    // Background scroll
+    const scrollSpeed = 60; // px/s — could tie to difficulty later
+    this.tileSprite.tilePositionY += scrollSpeed * (delta / 1000);
+
+    // Parallax movement
+    for (const item of this.parallaxItems) {
+      item.image.y += scrollSpeed * item.speed * (delta / 1000);
+      if (item.image.y > GameConfig.canvas.height + 60) {
+        item.image.y = -60;
+        item.image.x = Phaser.Math.Between(20, GameConfig.canvas.width - 20);
+      }
+    }
+
     // If paused (level-up screen), skip all game systems but still render
     if (gs.isPaused) {
-      // Show level-up screen if not already shown and choices exist
       if (!this.levelUpScreen && gs.levelUpChoices.length > 0) {
         this.levelUpScreen = showLevelUp(this, gs.levelUpChoices, (powerUpId: string) => {
           gs.activePowerUps.push(powerUpId);
@@ -109,32 +178,23 @@ export class GameScene extends Phaser.Scene {
       return;
     }
 
-    // Run systems in deterministic order
+    // Run systems
     spawnSystem(gs, delta);
     movementSystem(gs, delta);
-
-    // Always decrement cooldown every frame (even when idle) so cooldown
-    // can expire naturally over time without requiring key presses.
     combatSystem(gs, delta);
 
-    // Process pending keys. Only consume a key if the shot fired (justFired)
-    // or the key was a miss (no target). If a valid target was found but
-    // cooldown/overheat blocked the shot, leave the key in the queue to
-    // retry next frame so rapid keypresses aren't lost.
+    // Process pending keys
     while (gs.pendingKeys.length > 0) {
-      const key = gs.pendingKeys[0]; // peek, don't consume yet
+      const key = gs.pendingKeys[0];
       gs.lastKeyPressed = key;
       targetSystem(gs);
 
-      // Forgiveness: if the key doesn't match any current enemy but it was
-      // recently destroyed by a power-up (Piercing Shot, Dual Shot, etc.),
-      // treat it as forgiven — consume the key silently, no heat.
       if (gs.targetedEnemyId === null) {
         const fi = gs.forgivenKeys.findIndex((f) => f.key === key);
         if (fi !== -1) {
           gs.forgivenKeys.splice(fi, 1);
           gs.pendingKeys.shift();
-          continue; // skip combat/heat for this forgiven key
+          continue;
         }
       }
 
@@ -142,32 +202,27 @@ export class GameScene extends Phaser.Scene {
       combatSystem(gs, delta);
 
       if (gs.justFired || !hadTarget || gs.overheated) {
-        gs.pendingKeys.shift(); // consume — shot fired, miss, or overheated
+        gs.pendingKeys.shift();
       } else {
-        break; // cooldown blocked — leave key for next frame
+        break;
       }
     }
 
     heatBarSystem(gs, delta);
     difficultySystem(gs, delta);
-
-    // Clean up expired forgiven keys (older than 1 second)
     gs.forgivenKeys = gs.forgivenKeys.filter((f) => f.expiresAt > gs.elapsedTime);
-
     xpSystem(gs);
     scoreSystem(gs);
     collisionSystem(gs);
 
-    // Remove dead enemies from the array so they don't block spawning
     gs.enemies = gs.enemies.filter((e) => e.alive);
 
-    // If game over just triggered, show overlay
     if (gs.gameOver) {
       this.gameOverScreen = showGameOver(this, gs.score);
       return;
     }
 
-    // Handle projectile creation
+    // Projectile handling
     if (gs.justFired) {
       if (gs.targetedEnemyId !== null) {
         this.spawnProjectile();
@@ -178,17 +233,11 @@ export class GameScene extends Phaser.Scene {
       gs.justFired = false;
     }
 
-    // Update projectiles
     this.updateProjectiles(delta);
-
-    // Sync rendering
     this.syncAuraRendering();
     this.syncRendering();
-
-    // Update HUD
     this.hud.update(gs);
 
-    // Reset per-frame state
     gs.lastKeyPressed = null;
     gs.targetedEnemyId = null;
     gs.secondaryTargetId = null;
@@ -196,29 +245,28 @@ export class GameScene extends Phaser.Scene {
 
   private spawnProjectile(): void {
     const p = this.gameState.player;
-    const proj = this.add.rectangle(
-      p.x, p.y - p.height / 2,
+    const img = this.add.image(p.x, p.y - p.height / 2, 'bullet');
+    img.setDisplaySize(
       GameConfig.shooting.projectileWidth,
       GameConfig.shooting.projectileHeight,
-      parseInt(GameConfig.shooting.projectileColor.slice(1), 16),
     );
+    img.setDepth(15);
     this.projectiles.push({
-      graphic: proj,
+      image: img,
       targetId: this.gameState.targetedEnemyId!,
     });
   }
 
   private spawnSecondaryProjectile(): void {
     const p = this.gameState.player;
-    const offsetX = 8; // slight horizontal offset so both projectiles are visible
-    const proj = this.add.rectangle(
-      p.x + offsetX, p.y - p.height / 2,
+    const img = this.add.image(p.x + 8, p.y - p.height / 2, 'bullet');
+    img.setDisplaySize(
       GameConfig.shooting.projectileWidth,
       GameConfig.shooting.projectileHeight,
-      parseInt(GameConfig.shooting.projectileColor.slice(1), 16),
     );
+    img.setDepth(15);
     this.projectiles.push({
-      graphic: proj,
+      image: img,
       targetId: this.gameState.secondaryTargetId!,
     });
   }
@@ -234,30 +282,46 @@ export class GameScene extends Phaser.Scene {
       );
 
       if (!target) {
-        proj.graphic.destroy();
+        proj.image.destroy();
         this.projectiles.splice(i, 1);
         continue;
       }
 
       const tx = target.x + target.width / 2;
       const ty = target.y + target.height / 2;
-      const dx = tx - proj.graphic.x;
-      const dy = ty - proj.graphic.y;
+      const dx = tx - proj.image.x;
+      const dy = ty - proj.image.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < speed * deltaSec) {
-        // Projectile reached target
         if (target.pendingDestruction) {
           target.alive = false;
           this.gameState.gearDropped = true;
+          this.spawnGear(target.x, target.y);
         }
-        proj.graphic.destroy();
+        proj.image.destroy();
         this.projectiles.splice(i, 1);
       } else {
-        proj.graphic.x += (dx / dist) * speed * deltaSec;
-        proj.graphic.y += (dy / dist) * speed * deltaSec;
+        proj.image.x += (dx / dist) * speed * deltaSec;
+        proj.image.y += (dy / dist) * speed * deltaSec;
       }
     }
+  }
+
+  private spawnGear(x: number, y: number): void {
+    const gear = this.add.image(x, y, 'gear');
+    gear.setDisplaySize(20, 20);
+    gear.setDepth(8);
+    this.tweens.add({
+      targets: gear,
+      y: y - 25,
+      alpha: 0,
+      scaleX: 0.2,
+      scaleY: 0.2,
+      duration: 600,
+      ease: 'Power2',
+      onComplete: () => gear.destroy(),
+    });
   }
 
   private syncRendering(): void {
@@ -270,10 +334,11 @@ export class GameScene extends Phaser.Scene {
 
       let render = this.enemyRenderMap.get(enemy.id);
       if (!render) {
-        const rect = this.add.rectangle(
-          enemy.x, enemy.y, enemy.width, enemy.height,
-          parseInt(enemy.color.slice(1), 16),
-        );
+        const textureKey = Math.random() > 0.5 ? 'enemy-robot' : 'enemy-bug';
+        const img = this.add.image(enemy.x, enemy.y, textureKey);
+        img.setDisplaySize(enemy.width, enemy.height);
+        img.setDepth(5);
+
         const text = this.add.text(
           enemy.x - enemy.width / 2,
           enemy.y - enemy.height,
@@ -284,11 +349,13 @@ export class GameScene extends Phaser.Scene {
             color: GameConfig.wordDisplay.color,
           },
         );
-        render = { rect, text };
+        text.setDepth(6);
+
+        render = { image: img, text };
         this.enemyRenderMap.set(enemy.id, render);
       }
 
-      render.rect.setPosition(enemy.x, enemy.y);
+      render.image.setPosition(enemy.x, enemy.y);
       render.text.setPosition(
         enemy.x - enemy.width / 2,
         enemy.y - enemy.height,
@@ -298,11 +365,14 @@ export class GameScene extends Phaser.Scene {
 
     for (const [id, render] of this.enemyRenderMap) {
       if (!currentIds.has(id)) {
-        render.rect.destroy();
+        render.image.destroy();
         render.text.destroy();
         this.enemyRenderMap.delete(id);
       }
     }
+
+    // Player position
+    this.playerImage.setPosition(gs.player.x, gs.player.y);
   }
 
   private syncAuraRendering(): void {
@@ -320,7 +390,7 @@ export class GameScene extends Phaser.Scene {
           color,
           cfg.alpha,
         );
-        this.auraCircle.setDepth(-1); // behind enemies
+        this.auraCircle.setDepth(2);
       } else {
         this.auraCircle.setPosition(
           gs.player.x + gs.player.width / 2,
@@ -334,7 +404,6 @@ export class GameScene extends Phaser.Scene {
   }
 
   private restartGame(): void {
-    // Clean up game over overlay
     if (this.gameOverScreen) {
       this.gameOverScreen.destroy();
       this.gameOverScreen = null;
@@ -344,20 +413,24 @@ export class GameScene extends Phaser.Scene {
       this.levelUpScreen = null;
     }
 
-    // Clean up all game objects
-    this.playerRect.destroy();
+    this.playerImage.destroy();
     for (const [, render] of this.enemyRenderMap) {
-      render.rect.destroy();
+      render.image.destroy();
       render.text.destroy();
     }
     this.enemyRenderMap.clear();
     for (const proj of this.projectiles) {
-      proj.graphic.destroy();
+      proj.image.destroy();
     }
     this.projectiles = [];
+    for (const item of this.parallaxItems) {
+      item.image.destroy();
+    }
+    this.parallaxItems = [];
+    this.tileSprite.destroy();
+    this.weaponImage.destroy();
     this.children.removeAll(true);
 
-    // Re-create the scene
     this.create();
   }
 }
