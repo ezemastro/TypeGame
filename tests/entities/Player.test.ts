@@ -10,8 +10,8 @@ describe('PlayerState', () => {
 
   it('should create a player with config dimensions', () => {
     const player = createPlayer();
-    expect(player.width).toBe(56);
-    expect(player.height).toBe(70);
+    expect(player.width).toBe(50);
+    expect(player.height).toBe(50);
   });
 
   it('should create a player that is alive', () => {
