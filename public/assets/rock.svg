@@ -1,16 +1,22 @@
-<svg width="64" height="48" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg" role="img">
-  <title>TypeBot — Rock (Parallax Background)</title>
-  <desc>Clean rounded stone with subtle highlight and ground shadow.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="48" viewBox="0 0 64 48" role="img">
+  <title>AstroType — Space Debris</title>
+  <desc>Angular space debris built from overlapping rounded rectangles. Parallax background.</desc>
 
   <!-- Ground shadow -->
-  <ellipse cx="32" cy="43" rx="24" ry="5" fill="#1C280A" opacity="0.25" />
+  <ellipse cx="32" cy="44" rx="20" ry="3.5" fill="#000000" opacity="0.15" />
 
-  <!-- Rock body -->
-  <path d="M8 38 Q8 16 20 10 Q32 6 44 12 Q58 18 56 38 Q54 46 32 46 Q10 46 8 38Z" fill="#757575" />
+  <!-- Right fragment (top-right, lighter) -->
+  <rect x="38" y="4" width="18" height="28" rx="3" fill="#546E7A" />
 
-  <!-- Top highlight -->
-  <path d="M14 34 Q14 20 22 14 Q32 10 42 14 Q50 18 50 26 Q42 18 32 20 Q22 22 14 34Z" fill="#9E9E9E" opacity="0.55" />
+  <!-- Left fragment (mid-left, darker) -->
+  <rect x="2" y="16" width="12" height="24" rx="2" fill="#455A64" />
 
-  <!-- Bottom shadow accent -->
-  <path d="M12 38 Q12 44 32 44 Q52 44 50 38 Q40 46 22 46 Q12 44 12 38Z" fill="#616161" opacity="0.3" />
+  <!-- Main body (center) -->
+  <rect x="8" y="8" width="28" height="34" rx="3" fill="#546E7A" />
+
+  <!-- Highlight (light source top-left) -->
+  <rect x="40" y="4" width="10" height="8" rx="2" fill="#78909C" opacity="0.4" />
+
+  <!-- Edge accent (depth on right edge of main body) -->
+  <rect x="33" y="12" width="3" height="26" rx="1" fill="#455A64" opacity="0.5" />
 </svg>

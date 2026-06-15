@@ -1,19 +1,24 @@
-<svg width="80" height="110" viewBox="0 0 80 110" xmlns="http://www.w3.org/2000/svg" role="img">
-  <title>TypeBot — Pine Tree (Parallax Background)</title>
-  <desc>Clean geometric pine tree with layered triangular canopy and subtle ground shadow.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="80" height="110" viewBox="0 0 80 110" role="img">
+  <title>AstroType — Ringed Planet</title>
+  <desc>Purple Saturn-like planet with ring. Geometric construction using circles and ellipses only. Parallax background.</desc>
 
   <!-- Ground shadow -->
-  <ellipse cx="40" cy="106" rx="18" ry="4" fill="#1C280A" opacity="0.3" />
+  <ellipse cx="40" cy="106" rx="22" ry="4" fill="#000000" opacity="0.15" />
 
-  <!-- Trunk -->
-  <rect x="34" y="56" width="12" height="50" rx="2" fill="#5D4037" />
+  <!-- Planet body -->
+  <circle cx="40" cy="45" r="25" fill="#7C4DFF" />
 
-  <!-- Lower canopy — darker green base triangle -->
-  <polygon points="40,10 8,68 72,68" fill="#388E3C" />
+  <!-- Dark crescent (right side shadow) -->
+  <circle cx="50" cy="42" r="22" fill="#5E35B1" opacity="0.4" />
 
-  <!-- Upper canopy — lighter green highlight -->
-  <polygon points="40,4 16,52 64,52" fill="#4CAF50" opacity="0.8" />
+  <!-- Ring (behind planet top, in front of planet bottom) — split into two halves for proper layering -->
+  <!-- Ring back half (behind planet) -->
+  <ellipse cx="40" cy="48" rx="38" ry="10" fill="none" stroke="#B388FF" stroke-width="4" />
+  <ellipse cx="40" cy="48" rx="38" ry="10" fill="none" stroke="#D1C4E9" stroke-width="1.5" opacity="0.5" />
 
-  <!-- Right-side depth shadow -->
-  <polygon points="40,10 56,68 72,68" fill="#2E7D32" opacity="0.35" />
+  <!-- Front ring cover (obscures ring in front of planet) — using planet-colored ellipse clip effect -->
+  <ellipse cx="40" cy="42" rx="26" ry="26" fill="none" />
+
+  <!-- Core highlight (light source top-left) -->
+  <circle cx="32" cy="34" r="6" fill="#B388FF" opacity="0.35" />
 </svg>
