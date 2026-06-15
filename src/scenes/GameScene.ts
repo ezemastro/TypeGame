@@ -432,7 +432,7 @@ export class GameScene extends Phaser.Scene {
       scaleY: 0.2,
       duration: 600,
       ease: 'Power2',
-      onComplete: () => gear.destroy(),
+      onComplete: () => star.destroy(),
     });
   }
 
