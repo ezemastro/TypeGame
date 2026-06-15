@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80" role="img">
-  <title>AstroType — Piercing Cannon (Ship Overlay)</title>
-  <desc>Extended cyan cannon barrel for Piercing Shot. Overlays on player ship at same position. Static.</desc>
+  <title>AstroType — Piercing Cannon Extension</title>
+  <desc>Extended barrel that lengthens the ship's integrated cannon. Overlays on player ship. Static.</desc>
 
-  <!-- Extended barrel projecting from front (top) of ship -->
-  <rect x="28" y="0" width="8" height="14" rx="3" fill="#00E5FF" />
-  <rect x="30" y="0" width="4" height="6" rx="2" fill="#FFFFFF" opacity="0.8" />
+  <!-- Extended barrel — adds length to the base cannon -->
+  <rect x="29" y="-4" width="6" height="10" rx="2" fill="#00E5FF" />
+  <rect x="31" y="-4" width="2" height="4" rx="1" fill="#FFFFFF" opacity="0.8" />
 </svg>

@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="80" viewBox="0 0 64 80" role="img">
   <title>AstroType — Player Starship</title>
-  <desc>Simple bold starfighter silhouette. Large geometric hull, swept wings, single cockpit. Power core signature. Static for Phaser.CANVAS.</desc>
+  <desc>Simple bold starfighter with integrated front cannon. Large geometric hull, swept wings, cockpit, power core. Static for Phaser.CANVAS.</desc>
 
   <!-- Shadow -->
   <ellipse cx="32" cy="74" rx="22" ry="4" fill="#000000" opacity="0.15" />
@@ -16,6 +16,10 @@
 
   <!-- Nose highlight -->
   <rect x="22" y="6" width="20" height="12" rx="5" fill="#80F0FF" opacity="0.45" />
+
+  <!-- Integrated front cannon (small, centered at nose) -->
+  <rect x="29" y="2" width="6" height="8" rx="2" fill="#00B8D4" />
+  <rect x="31" y="2" width="2" height="4" rx="1" fill="#FFFFFF" opacity="0.6" />
 
   <!-- Cockpit (large, centered high) -->
   <circle cx="32" cy="26" r="8" fill="#FFFFFF" />
