@@ -1,32 +1,26 @@
 <svg width="12" height="24" viewBox="0 0 12 24" xmlns="http://www.w3.org/2000/svg" role="img">
   <title>TypeBot — Bullet / Projectile</title>
-  <desc>Neon green capsule projectile with white core and top glow. Internal pulse animation only — movement is handled by the game engine.</desc>
+  <desc>Neon green capsule projectile with white core. Flat colors, circles and rounded rectangles only.</desc>
 
   <style>
     @media (prefers-reduced-motion: reduce) {
-      .bullet {
-        animation: none !important;
-      }
+      .bullet { animation: none !important; }
     }
-
-    .bullet {
-      animation: bulletPulse 0.3s ease-in-out infinite;
-    }
-
+    .bullet { animation: bulletPulse 0.3s ease-in-out infinite; }
     @keyframes bulletPulse {
-      0%, 100% { opacity: 0.8; }
+      0%, 100% { opacity: 0.85; }
       50%      { opacity: 1; }
     }
   </style>
 
   <g class="bullet">
-    <!-- Outer capsule body -->
-    <rect x="3" y="3" width="6" height="18" rx="3" fill="#00E676" />
+    <!-- Outer capsule body — fills the viewBox -->
+    <rect x="1" y="0" width="10" height="24" rx="5" fill="#00E676" />
 
-    <!-- White energy core -->
-    <rect x="4.5" y="7" width="3" height="10" rx="1.5" fill="#FFFFFF" />
+    <!-- White energy core — runs center length -->
+    <rect x="3.5" y="4" width="5" height="16" rx="2.5" fill="#FFFFFF" opacity="0.8" />
 
-    <!-- Bright spot at tip -->
-    <circle cx="6" cy="5" r="1.2" fill="#FFFFFF" />
+    <!-- Bright tip glow -->
+    <circle cx="6" cy="2" r="2" fill="#FFFFFF" />
   </g>
 </svg>

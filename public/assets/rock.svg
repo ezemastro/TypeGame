@@ -1,13 +1,13 @@
-<svg width="48" height="36" viewBox="0 0 48 36" xmlns="http://www.w3.org/2000/svg" role="img">
+<svg width="64" height="48" viewBox="0 0 64 48" xmlns="http://www.w3.org/2000/svg" role="img">
   <title>TypeBot — Rock (Parallax Background)</title>
-  <desc>Stylized rock with overlapping gray ellipses. Minimalist geometric shape for parallax depth.</desc>
+  <desc>Stylized rock with overlapping gray ellipses. Larger viewBox for better screen presence.</desc>
 
   <!-- Largest bottom rock -->
-  <ellipse cx="24" cy="24" rx="20" ry="12" fill="#9E9E9E" />
+  <ellipse cx="32" cy="32" rx="28" ry="16" fill="#9E9E9E" />
 
   <!-- Mid-left highlight -->
-  <ellipse cx="16" cy="20" rx="12" ry="8" fill="#BDBDBD" />
+  <ellipse cx="20" cy="24" rx="18" ry="12" fill="#BDBDBD" />
 
   <!-- Top-right darker accent -->
-  <ellipse cx="32" cy="16" rx="10" ry="7" fill="#757575" />
+  <ellipse cx="42" cy="20" rx="14" ry="10" fill="#757575" />
 </svg>

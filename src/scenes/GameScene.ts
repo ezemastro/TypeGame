@@ -24,6 +24,7 @@ interface EnemyRender {
 
 interface ProjectileRender {
   image: Phaser.GameObjects.Image;
+  glow: Phaser.GameObjects.Image;
   targetId: number;
 }
 
@@ -135,7 +136,7 @@ export class GameScene extends Phaser.Scene {
         texture,
       );
       item.setDepth(1);
-      item.setScale(Phaser.Math.FloatBetween(0.5, 0.8));
+      item.setScale(Phaser.Math.FloatBetween(0.7, 1.1));
       this.parallaxItems.push({ image: item, speed: 1 });
     }
   }
@@ -246,23 +247,38 @@ export class GameScene extends Phaser.Scene {
     const p = this.gameState.player;
     const texW = GameConfig.shooting.projectileWidth;
     const texH = GameConfig.shooting.projectileHeight;
+    const originX = p.x;
+    const originY = p.y - p.height / 2;
 
-    // Fallback: if bullet texture fails, draw a green rectangle
+    // Fallback: if bullet texture fails, create a bright green rounded rectangle
     if (!this.textures.exists('bullet')) {
-      const rect = this.add.rectangle(p.x, p.y - p.height / 2, texW, texH, 0x00ff88);
+      const glow = this.add.circle(originX, originY, texW * 1.2, 0x00ff88, 0.3);
+      glow.setDepth(14);
+      const rect = this.add.circle(originX, originY, texW * 0.6, 0xffffff);
+      rect.setDisplaySize(texW, texH);
       rect.setDepth(15);
       this.projectiles.push({
         image: rect as unknown as Phaser.GameObjects.Image,
+        glow: glow as unknown as Phaser.GameObjects.Image,
         targetId: this.gameState.targetedEnemyId!,
       });
       return;
     }
 
-    const img = this.add.image(p.x, p.y - p.height / 2, 'bullet');
+    // Glow: larger, semi-transparent copy behind the bullet
+    const glow = this.add.image(originX, originY, 'bullet');
+    glow.setDisplaySize(texW * 1.6, texH * 1.3);
+    glow.setAlpha(0.25);
+    glow.setTint(0x00ff88);
+    glow.setDepth(14);
+
+    const img = this.add.image(originX, originY, 'bullet');
     img.setDisplaySize(texW, texH);
+    img.setScale(0.8);
     img.setDepth(15);
     this.projectiles.push({
       image: img,
+      glow,
       targetId: this.gameState.targetedEnemyId!,
     });
   }
@@ -271,23 +287,38 @@ export class GameScene extends Phaser.Scene {
     const p = this.gameState.player;
     const texW = GameConfig.shooting.projectileWidth;
     const texH = GameConfig.shooting.projectileHeight;
+    const originX = p.x + 8;
+    const originY = p.y - p.height / 2;
 
-    // Fallback: if bullet texture fails, draw a green rectangle
+    // Fallback: if bullet texture fails, create a bright green rounded rectangle
     if (!this.textures.exists('bullet')) {
-      const rect = this.add.rectangle(p.x + 8, p.y - p.height / 2, texW, texH, 0x00ff88);
+      const glow = this.add.circle(originX, originY, texW * 1.2, 0x00ff88, 0.3);
+      glow.setDepth(14);
+      const rect = this.add.circle(originX, originY, texW * 0.6, 0xffffff);
+      rect.setDisplaySize(texW, texH);
       rect.setDepth(15);
       this.projectiles.push({
         image: rect as unknown as Phaser.GameObjects.Image,
+        glow: glow as unknown as Phaser.GameObjects.Image,
         targetId: this.gameState.secondaryTargetId!,
       });
       return;
     }
 
-    const img = this.add.image(p.x + 8, p.y - p.height / 2, 'bullet');
+    // Glow: larger, semi-transparent copy behind the bullet
+    const glow = this.add.image(originX, originY, 'bullet');
+    glow.setDisplaySize(texW * 1.6, texH * 1.3);
+    glow.setAlpha(0.25);
+    glow.setTint(0x00ff88);
+    glow.setDepth(14);
+
+    const img = this.add.image(originX, originY, 'bullet');
     img.setDisplaySize(texW, texH);
+    img.setScale(0.8);
     img.setDepth(15);
     this.projectiles.push({
       image: img,
+      glow,
       targetId: this.gameState.secondaryTargetId!,
     });
   }
@@ -304,6 +335,7 @@ export class GameScene extends Phaser.Scene {
 
       if (!target) {
         proj.image.destroy();
+        proj.glow.destroy();
         this.projectiles.splice(i, 1);
         continue;
       }
@@ -321,10 +353,13 @@ export class GameScene extends Phaser.Scene {
           this.spawnGear(target.x, target.y);
         }
         proj.image.destroy();
+        proj.glow.destroy();
         this.projectiles.splice(i, 1);
       } else {
         proj.image.x += (dx / dist) * speed * deltaSec;
         proj.image.y += (dy / dist) * speed * deltaSec;
+        proj.glow.x = proj.image.x;
+        proj.glow.y = proj.image.y;
       }
     }
   }
@@ -517,6 +552,7 @@ export class GameScene extends Phaser.Scene {
     this.enemyRenderMap.clear();
     for (const proj of this.projectiles) {
       proj.image.destroy();
+      proj.glow.destroy();
     }
     this.projectiles = [];
     for (const item of this.parallaxItems) {
