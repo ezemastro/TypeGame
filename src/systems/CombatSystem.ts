@@ -34,23 +34,6 @@ export function combatSystem(state: GameState, delta: number): GameState {
   // Check if word fully destroyed
   if (enemy.word.length === 0) {
     enemy.pendingDestruction = true;
-
-    // Explosive Impact: push nearby enemies away
-    if (state.activePowerUps.includes('EXPLOSIVE_IMPACT')) {
-      const cfg = GameConfig.powerUps.explosiveImpact;
-      for (const other of state.enemies) {
-        if (other.id === enemy.id || !other.alive) continue;
-        const dx = other.x - enemy.x;
-        const dy = other.y - enemy.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < cfg.pushRadius && dist > 0) {
-          const nx = dx / dist;
-          const ny = dy / dist;
-          other.x += nx * cfg.pushStrength;
-          other.y += ny * cfg.pushStrength;
-        }
-      }
-    }
   }
 
   // Piercing Shot: damage another enemy behind the primary target
@@ -89,10 +72,13 @@ export function combatSystem(state: GameState, delta: number): GameState {
         const dot = pnx * onx + pny * ony;
 
         if (dot > 0.96) {
-          // Piercing hit: strip first letter, no points, no pendingDestruction
+          // Piercing hit: strip first letter, no points
           const pierceLetter = other.word[0];
           other.word = other.word.slice(1);
           state.forgivenKeys.push({ key: pierceLetter, expiresAt: state.elapsedTime + 1000 });
+          if (other.word.length === 0) {
+            other.pendingDestruction = true;
+          }
           break; // only one pierce per shot
         }
       }

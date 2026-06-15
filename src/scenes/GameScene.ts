@@ -26,6 +26,7 @@ interface ProjectileRender {
   image: Phaser.GameObjects.Image;
   glow: Phaser.GameObjects.Image;
   targetId: number;
+  hasPierced: boolean;
 }
 
 type ParallaxType = 'nebula' | 'ground';
@@ -332,6 +333,7 @@ export class GameScene extends Phaser.Scene {
         image: rect as unknown as Phaser.GameObjects.Image,
         glow: glow as unknown as Phaser.GameObjects.Image,
         targetId: this.gameState.targetedEnemyId!,
+        hasPierced: false,
       });
       return;
     }
@@ -351,6 +353,7 @@ export class GameScene extends Phaser.Scene {
       image: img,
       glow,
       targetId: this.gameState.targetedEnemyId!,
+      hasPierced: false,
     });
   }
 
@@ -372,6 +375,7 @@ export class GameScene extends Phaser.Scene {
         image: rect as unknown as Phaser.GameObjects.Image,
         glow: glow as unknown as Phaser.GameObjects.Image,
         targetId: this.gameState.secondaryTargetId!,
+        hasPierced: false,
       });
       return;
     }
@@ -391,6 +395,7 @@ export class GameScene extends Phaser.Scene {
       image: img,
       glow,
       targetId: this.gameState.secondaryTargetId!,
+      hasPierced: false,
     });
   }
 
@@ -427,6 +432,54 @@ export class GameScene extends Phaser.Scene {
             this.spawnExplosion(target.x, target.y);
           }
         }
+
+        // Piercing Shot: projectile continues through to next enemy in line
+        if (
+          !proj.hasPierced &&
+          this.gameState.activePowerUps.includes('PIERCING_SHOT')
+        ) {
+          const playerCX = this.gameState.player.x + this.gameState.player.width / 2;
+          const playerCY = this.gameState.player.y + this.gameState.player.height / 2;
+          const tcx = target.x + target.width / 2;
+          const tcy = target.y + target.height / 2;
+          const pdx = tcx - playerCX;
+          const pdy = tcy - playerCY;
+          const primaryDist = Math.sqrt(pdx * pdx + pdy * pdy);
+
+          if (primaryDist > 0) {
+            const pnx = pdx / primaryDist;
+            const pny = pdy / primaryDist;
+            const letter = target.word.length > 0 ? target.word[0] : '';
+
+            let nextDist = Infinity;
+            let nextEnemy: (typeof target) | null = null;
+
+            for (const other of this.gameState.enemies) {
+              if (other.id === proj.targetId || !other.alive) continue;
+              const ocx = other.x + other.width / 2;
+              const ocy = other.y + other.height / 2;
+              const odx = ocx - playerCX;
+              const ody = ocy - playerCY;
+              const otherDist = Math.sqrt(odx * odx + ody * ody);
+              if (otherDist <= primaryDist) continue;
+              if (otherDist >= nextDist) continue;
+              const onx = odx / otherDist;
+              const ony = ody / otherDist;
+              const dot = pnx * onx + pny * ony;
+              if (dot > 0.96) {
+                nextDist = otherDist;
+                nextEnemy = other;
+              }
+            }
+
+            if (nextEnemy) {
+              proj.targetId = nextEnemy.id;
+              proj.hasPierced = true;
+              continue;
+            }
+          }
+        }
+
         proj.image.destroy();
         proj.glow.destroy();
         this.projectiles.splice(i, 1);

@@ -160,8 +160,8 @@ describe('CombatSystem', () => {
     expect(state.score).toBe(GameConfig.scoring.pointsPerLetter);
   });
 
-  describe('Explosive Impact power-up', () => {
-    it('should push nearby enemies away when destroying an enemy with EXPLOSIVE_IMPACT', () => {
+  describe('Explosive Impact power-up (REMOVED from CombatSystem)', () => {
+    it('should NOT push nearby enemies on word completion (push moved to projectile hit)', () => {
       const target = createEnemy('A', 1);
       target.x = 400;
       target.y = 200;
@@ -182,20 +182,20 @@ describe('CombatSystem', () => {
       // Target is marked for destruction
       expect(state.enemies[0].pendingDestruction).toBe(true);
 
-      // Nearby enemy should be pushed away from target
-      expect(state.enemies[1].x).toBeGreaterThan(450); // pushed right
+      // Nearby enemy should NOT be pushed on word completion
+      expect(state.enemies[1].x).toBe(450); // unchanged
     });
 
-    it('should NOT push enemies outside pushRadius', () => {
+    it('should NOT push any enemies regardless of distance', () => {
       const target = createEnemy('A', 1);
       target.x = 400;
       target.y = 200;
-      const far = createEnemy('SOL', 2);
-      far.x = 600; // 200px away, outside 150 radius
-      far.y = 200;
+      const nearby = createEnemy('SOL', 2);
+      nearby.x = 430; // 30px away, well within old pushRadius
+      nearby.y = 200;
 
       const state = makeState(
-        [target, far],
+        [target, nearby],
         {
           targetedEnemyId: 1,
           shootCooldown: 0,
@@ -205,11 +205,12 @@ describe('CombatSystem', () => {
 
       combatSystem(state, 0);
 
-      // Far enemy should NOT be pushed
-      expect(state.enemies[1].x).toBe(600);
+      // No push from CombatSystem
+      expect(state.enemies[1].x).toBe(430);
+      expect(state.enemies[1].y).toBe(200);
     });
 
-    it('should NOT trigger explosive push without the power-up', () => {
+    it('should NOT trigger explosive push without the power-up (still true)', () => {
       const target = createEnemy('A', 1);
       target.x = 400;
       target.y = 200;
@@ -232,7 +233,7 @@ describe('CombatSystem', () => {
       expect(state.enemies[1].x).toBe(450);
     });
 
-    it('should push enemies in the correct direction (away from destroyed enemy)', () => {
+    it('should mark target for destruction without affecting other enemies', () => {
       const target = createEnemy('A', 1);
       target.x = 400;
       target.y = 200;
@@ -251,8 +252,10 @@ describe('CombatSystem', () => {
 
       combatSystem(state, 0);
 
-      // Should be pushed left (further away)
-      expect(state.enemies[1].x).toBeLessThan(300);
+      // Target marked, neighbor untouched
+      expect(state.enemies[0].pendingDestruction).toBe(true);
+      expect(state.enemies[1].x).toBe(300); // NOT pushed
+      expect(state.enemies[1].alive).toBe(true);
     });
   });
 
@@ -357,7 +360,7 @@ describe('CombatSystem', () => {
       expect(state.enemies[1].word).toBe('SAL');
     });
 
-    it('should NOT set pendingDestruction on pierced enemy even if word emptied', () => {
+    it('should set pendingDestruction on pierced enemy when word emptied', () => {
       const primary = createEnemy('SOL', 1);
       primary.x = 200;
       primary.y = 300;
@@ -379,9 +382,10 @@ describe('CombatSystem', () => {
       // Primary stripped
       expect(state.enemies[0].word).toBe('OL');
       // Behind emptied but NOT marked for destruction
+      // Pierced enemy with empty word SHOULD be marked for destruction
       expect(state.enemies[1].word).toBe('');
       expect(state.enemies[1].alive).toBe(true);
-      expect(state.enemies[1].pendingDestruction).toBe(false);
+      expect(state.enemies[1].pendingDestruction).toBe(true);
       expect(state.gearDropped).toBe(false);
     });
   });
