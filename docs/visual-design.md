@@ -1,242 +1,250 @@
-# TypeBot — Visual Design Document
+# AstroType — Visual Design Document
 
-## 🎯 Filosofía visual
+## 🎯 Visual Philosophy
 
-**Principio rector**: "Geometría amigable". Figuras simples (círculos, rectángulos redondeados, triángulos) componen personajes y objetos. Como un juguete de bloques. Atractivo para niños de 6-8 años pero con suficiente personalidad para cualquier edad.
+**Core principle**: "Geometric Space". Every asset is built from exactly 3 primitives — `<rect rx>`, `<circle>`, `<ellipse>`. No paths, no polygons, no lines. Like building spaceships with toy blocks. Appealing to 1st-2nd graders (6-8 years) with enough personality for any age.
 
-**Referencias**: Duolingo characters, Monument Valley, Crossy Road.
+**Signature element**: The "power core" — concentric circles with a white dot at the center — appears on every ship and the HUD cannon. It's the AstroType visual trademark.
 
----
-
-## 🎨 Paleta de colores
-
-### Primarios
-| Nombre | Hex | Uso |
-|--------|-----|-----|
-| Verde robot | `#00E676` | Robot principal, balas, acentos |
-| Rojo enemigo | `#FF5252` | Enemigos tipo robot |
-| Naranja bug | `#FF7043` | Enemigos tipo bug |
-
-### Secundarios
-| Nombre | Hex | Uso |
-|--------|-----|-----|
-| Dorado | `#FFD740` | Tuercas, XP bar, estrellas |
-| Azul aura | `#448AFF` | Aura ralentizadora, poder |
-| Violeta | `#B388FF` | Piercing shot, magia |
-| Blanco | `#FFFFFF` | Ojos, brillos, texto |
-| Gris oscuro | `#263238` | Sombras, bordes |
-
-### Entorno
-| Nombre | Hex | Uso |
-|--------|-----|-----|
-| Verde pasto claro | `#7CB342` | Piso principal |
-| Verde pasto oscuro | `#558B2F` | Detalles pasto |
-| Marrón camino | `#A1887F` | Camino/senda |
-| Celeste cielo | `#81D4FA` | Fondo cielo |
-| Blanco nube | `#ECEFF1` | Nubes decorativas |
-
-### UI / HUD
-| Nombre | Hex | Uso |
-|--------|-----|-----|
-| Fondo HUD | `#1a1a2e` | Fondo de barras |
-| Rojo calor | `#FF3D00` | Barra de calor llena |
-| Naranja calor | `#FF9100` | Barra de calor parcial |
-| Amarillo XP | `#FFD740` | Barra de experiencia |
+**References**: Galaga, Asteroids, Among Us (simplicity), Monument Valley (geometric elegance).
 
 ---
 
-## 👾 Personajes
+## 🎨 Color Palette
 
-### 🤖 Robot principal (TypeBot)
-Visto desde arriba en ángulo 3/4 (~45°). Mirando hacia arriba.
+### Ships & Projectiles
+| Name | Hex | Usage |
+|------|-----|-------|
+| Player cyan | `#00E5FF` | Player ship, laser, HUD accents |
+| Player dark | `#00B8D4` | Player wings, hull details |
+| Player highlight | `#80F0FF` | Specular highlights |
+| Enemy fighter | `#FF5252` | Fighter ship body |
+| Fighter dark | `#D32F2F` | Fighter claws, eyes |
+| Enemy scout | `#E040FB` | Scout ship body |
+| Scout dark | `#AA00FF` | Scout wings, pupils |
+| Laser core | `#FFFFFF` | Laser energy core |
 
-**Composición geométrica**:
-- **Cuerpo**: Rectángulo redondeado vertical (32×40, rx=8), verde `#00E676`
-- **Cabeza**: Círculo (r=16) sobre el cuerpo, mismo verde, ligeramente más claro
-- **Antena**: Línea vertical delgada (h=10) + círculo pequeño (r=3) en la punta
-- **Ojos**: Dos círculos blancos (r=4) con pupilas negras (r=2)
-- **Brazos**: Dos rectángulos redondeados finos (8×16) a los costados
-- **Piernas**: Dos rectángulos redondeados (10×14) abajo
-- **Detalle pecho**: Círculo pequeño blanco en el centro (luz/indicador)
+### Collectibles & UI
+| Name | Hex | Usage |
+|------|-----|-------|
+| Gold | `#FFD740` | Star collectible, level text |
+| Gold light | `#FFE57F` | Star inner glow |
+| HUD bg | `#1E1E3F` | Bar backgrounds, card fills |
+| HUD text | `#FFFFFF` | UI text, enemy words |
 
-**Animación de caminata** (CSS/SMIL):
-- Piernas: rotación alternada ±15° con `animation: walk 0.4s ease-in-out infinite alternate`
-- Brazos: balanceo opuesto a piernas
-- Cuerpo: leve rebote vertical (translateY ±2px)
-- Antena: oscilación sutil
-- Ojos: parpadeo cada 3 segundos
+### Environment
+| Name | Hex | Usage |
+|------|-----|-------|
+| Deep space | `#0B0E2A` | Background, overlay |
+| Planet body | `#7C4DFF` | Planet surface |
+| Planet ring | `#B388FF` | Saturn-like ring |
+| Planet shadow | `#5E35B1` | Dark crescent |
+| Asteroid | `#757575` | Asteroid body |
+| Asteroid light | `#9E9E9E` | Asteroid highlights |
+| Asteroid dark | `#616161` | Asteroid craters |
+| Debris | `#546E7A` | Space debris body |
+| Debris light | `#78909C` | Debris highlights |
+| Nebula | `#E040FB` | Nebula gas (low opacity) |
+| Nebula accent | `#448AFF` | Cyan nebula accent |
+| Nebula base | `#B388FF` | Lavender nebula base |
+| Star white | `#FFFFFF` | Bright stars in tile |
+| Star blue | `#90CAF9` | Blue stars in tile |
+| Star dim | `#B0BEC5` | Dim background stars |
+| Weapon barrel | `#78909C` | Cannon barrel |
+| Weapon grip | `#607D8B` | Cannon grip |
 
-**Tamaño**: 64×80 viewBox
-
-### 🔴 Enemigo Robot
-Visto desde arriba en ángulo 3/4. Mirando hacia abajo (hacia el jugador).
-
-**Composición**:
-- **Cuerpo**: Cuadrado redondeado (36×36, rx=6), rojo `#FF5252`
-- **Pinzas**: Dos triángulos a los costados apuntando hacia abajo
-- **Ojos**: Dos círculos rojos brillantes (r=3) con brillo blanco
-- **Boca**: Línea horizontal dentada (serrucho)
-- **Patas**: Dos pequeños rectángulos abajo
-
-**Animación**:
-- Pinzas: apertura/cierre alternado
-- Cuerpo: leve rotación ±3°
-- Ojos: brillo pulsante
-
-**Tamaño**: 48×48 viewBox
-
-### 🟠 Enemigo Bug
-Visto desde arriba.
-
-**Composición**:
-- **Cuerpo**: Óvalo (40×28), naranja `#FF7043`
-- **Ojos**: Dos círculos grandes blancos (r=6) con pupilas, sobre la cabeza
-- **Antenas**: Dos líneas curvas hacia arriba con bolitas
-- **Patas**: 6 líneas finas (3 por lado)
-- **Alas**: Dos semicírculos translúcidos sobre el cuerpo
-
-**Animación**:
-- Patas: movimiento ondulatorio
-- Alas: leve aleteo
-- Antenas: oscilación
-
-**Tamaño**: 56×48 viewBox
+### Heat / XP
+| Name | Hex | Usage |
+|------|-----|-------|
+| Heat normal | `#FF9100` | Heat bar active |
+| Heat overheat | `#FF3D00` | Heat bar full/overheat |
+| XP bar fill | `#00E5FF` | Experience progress |
 
 ---
 
-## 🔫 Armas (HUD top-right)
+## 🚀 Ships
 
-El arma se muestra fija arriba a la derecha como indicador de power-ups activos.
+### Player Spaceship (`player-ship.svg`, 64×80)
+Top-down view, facing up. Diamond-shaped hull with wings.
 
-### Arma base (sin mejoras)
-- Cañón simple: rectángulo horizontal (40×12, rx=4), gris metálico `#78909C`
-- Boquilla: círculo verde `#00E676` en la punta
+- **Hull**: Rounded rect 32×42, cyan `#00E5FF`, rx=6
+- **Wings**: Two rounded rects at sides (12×22 each), darker cyan `#00B8D4`
+- **Cockpit**: White circle r=6 with cyan pupil r=2, near top
+- **Power core**: Dark cyan circle r=5 + white dot r=2, center-lower
+- **Engine glow**: Cyan circle at rear, opacity 0.5
+- **Hull panels**: Two thin horizontal rects across body, 0.4 opacity
+- **Shadow**: Ellipse at base
 
-### Mejoras visuales (se apilan)
-| Power-up | Cambio visual |
-|----------|---------------|
-| Explosive Impact | Anillos naranjas `#FF7043` alrededor del cañón |
-| Piercing Shot | Punta azul `#448AFF` + estela |
-| Dual Shot | Segundo cañón paralelo debajo |
-| Slowing Aura | Anillo azul `#448AFF` pulsante alrededor |
-| Quick Cooling | Aletas de refrigeración grises |
-| Sharp Sight | Lente/mira circular `#B388FF` en la punta |
+### Enemy Fighter (`enemy-fighter.svg`, 48×48)
+Top-down, facing down. Wider and squat — distinctly different silhouette from player.
 
-**Animación**: El arma idle tiene un leve brillo pulsante. Al disparar, retroceso breve.
+- **Body**: Wide rect 40×32, crimson `#FF5252`, rx=5
+- **Claws**: Two narrow rects at sides (8×16), dark red `#D32F2F`
+- **Eyes**: White circles r=4.5 with red pupils offset down (menacing)
+- **Power core**: Dark red circle r=4 + white dot r=1.5
+- **Shadow**: Ellipse at base
 
----
+### Enemy Scout (`enemy-scout.svg`, 56×48)
+Top-down, facing down. Oval, organic — distinct from angular fighter.
 
-## ⚙️ Coleccionables
-
-### Tuerca / Engranaje
-- Círculo dorado `#FFD740` (r=12) con hueco central (r=4)
-- 6 dientes (pequeños rectángulos radiales)
-- Brillo interno (círculo más claro)
-
-**Animación**: Rotación continua + leve rebote al aparecer. Al colectarse: escala a 0 + fade out.
-
----
-
-## 🎯 Proyectiles
-
-### Bala normal
-- Cápsula vertical: rectángulo redondeado (6×18, rx=3)
-- Color: verde `#00E676` con núcleo blanco
-- Pequeño rastro/estela de 3 círculos decrecientes
-
-### Bala perforante (con power-up)
-- Igual pero con punta azul `#448AFF`
-- Estela más larga (5 círculos)
-
-**Animación**: La bala viaja sin animación propia (se mueve por código). La estela se actualiza por frame.
+- **Body**: Large ellipse rx=18 ry=15, magenta `#E040FB`
+- **Wings**: Two translucent ellipses at sides (rx=8 ry=18), dark magenta 0.35 opacity
+- **Eyes**: White circles r=5 with dark magenta pupils r=2
+- **Wing dots**: Small circles on wing edges, 0.5 opacity
+- **Shadow**: Ellipse at base
 
 ---
 
-## 🌳 Entorno
+## ⚡ Weapons & Projectiles
 
-### Piso (tile de pasto + camino)
-- Rectángulo 128×128, seamless tile horizontal y vertical
-- Fondo: verde pasto `#7CB342`
-- Camino: franja diagonal marrón `#A1887F` (ancho ~40px) que cruza de izquierda a derecha
-- Detalles: pequeños puntos/rectángulos verde oscuro `#558B2F` simulando textura de pasto
+### Laser Bolt (`laser.svg`, 12×24)
+Capsule projectile, simple energy bolt.
 
-### Árbol (parallax)
-- Tronco: rectángulo marrón `#795548` (12×40)
-- Copa: círculo grande `#66BB6A` (r=30) + círculo más pequeño superpuesto
-- Sombra en el piso: elipse oscura semitransparente
+- **Body**: Rounded rect 10×24, cyan `#00E5FF`, rx=5
+- **Core**: White inner rect 5×16, opacity 0.8
+- **Tip glow**: White circle at top r=2
 
-### Nubes (fondo cielo)
-- 3-4 círculos blancos `#ECEFF1` solapados formando forma de nube
-- Opacidad: 0.6
-- Movimiento parallax lento horizontal
+### Ship Cannon HUD (`weapon-base.svg`, 80×40)
+Displayed top-right in HUD. Static (no CSS animations — Phaser.CANVAS).
 
----
-
-## 🖥️ Interfaz (UI)
-
-### HUD inferior
-- Fondo: barra oscura semitransparente `#1a1a2e` con 80% opacidad
-- Score: número grande blanco, fuente monospace
-- XP bar: barra horizontal amarilla `#FFD740`, fondo `#37474F`
-- Heat bar: 5 segmentos, `#FF9100` a `#FF3D00`
-- Level: "Lv. N" pequeño abajo a la izquierda
-
-### Pantalla de Level Up
-- Overlay oscuro semitransparente (mismo tono que fondo HUD, 85% opacity)
-- Título "LEVEL UP!" grande, dorado, con animación de escala pulsante
-- 3 tarjetas de elección: rectángulos `#37474F` con borde `#00E676`
-- Número [1] [2] [3] a la izquierda, nombre y descripción del power-up
-
-### Pantalla de Game Over
-- Overlay similar
-- "GAME OVER" en rojo `#FF5252`
-- Score final grande
-- "Press R to restart" abajo
+- **Grip**: Vertical rect at left, dark gray `#607D8B`
+- **Barrel**: Long horizontal rect with rx=4, `#78909C`
+- **Detail lines**: Two thin vertical rects on barrel
+- **Muzzle**: Cyan glow circle r=8 opacity 0.2 + ring r=4.5 + white core r=2
+- **Indicator**: Small cyan circle top of barrel
 
 ---
 
-## 📐 Sistema de tamaños
+## ⭐ Collectibles
 
-Todos los SVGs usan viewBox cuadrados para facilitar posicionamiento en Phaser:
+### Energy Star (`star.svg`, 32×32)
+Golden 4-pointed cross star. Replaces the old gear collectible.
 
-| Asset | viewBox | Tamaño real en juego |
+- **Spikes**: 4 rounded rects (4×8) in cardinal directions, gold `#FFD740`
+- **Center**: Gold circle r=7
+- **Glow**: Lighter gold circle r=4, `#FFE57F`
+- **Highlight**: White circle offset top-left, opacity 0.5
+- **No shadow** (floating collectible)
+
+---
+
+## 🌌 Environment
+
+### Starfield Tile (`starfield.svg`, 128×128)
+Seamless tiling background. Used as Phaser tileSprite.
+
+- **Background**: Full rect, deep space `#0B0E2A`
+- **Stars**: 20 circles r=1-3, scattered naturally across 128×128
+  - 12 white stars (`#FFFFFF`, opacity 0.4-0.9)
+  - 5 blue stars (`#90CAF9`, opacity 0.3-0.6)
+  - 3 dim stars (`#B0BEC5`, opacity 0.2-0.4)
+- **Nebula bands**: Two faint horizontal ellipses (purple + blue, opacity 0.04-0.06) for depth
+
+### Nebula (`nebula.svg`, 120×60)
+Soft diffuse gas clouds. Parallax background.
+
+- **Base**: Large lavender ellipse, opacity 0.10
+- **Core**: Pink-purple ellipse, opacity 0.12
+- **Accent**: Cyan-blue ellipse, opacity 0.08
+- **Highlight**: Bright center ellipse, opacity 0.15
+- **Star flecks**: 3 tiny white circles within the cloud, opacity 0.15-0.25
+
+### Ringed Planet (`planet.svg`, 80×110)
+Saturn-like planet. Floating in space (no ground shadow).
+
+- **Body**: Purple circle r=25, `#7C4DFF`
+- **Crescent shadow**: Darker purple circle offset right, opacity 0.4
+- **Ring**: Ellipse stroke (no fill), `#B388FF` width 4
+- **Ring highlight**: Thin ellipse stroke, lighter purple, opacity 0.5
+- **Core glow**: Small highlight circle, top-left
+- **Moon**: Small gray circle with highlight, lower-left
+
+### Asteroid (`asteroid.svg`, 72×56)
+Individual floating asteroids. No longer a grounded cluster.
+
+- **Rock 1** (large, left): Circle r=14, `#757575`, with 3 craters + highlight
+- **Rock 2** (medium, lower-right): Circle r=11, `#9E9E9E`, with 2 craters + highlight
+- **Rock 3** (small, top-right): Circle r=8, `#757575`, with 1 crater + highlight
+- **No shadow** (floating in space)
+
+### Meteorite (`meteorite.svg`, 64×48)
+Angular space debris. Built from overlapping rounded rects.
+
+- **Main chunk**: Rounded rect, `#546E7A`, rx=3
+- **Left fragment**: Smaller darker rect, `#455A64`
+- **Right fragment**: Lighter rect, `#546E7A`
+- **Highlight**: Small light rect on top-right, `#78909C`, opacity 0.4
+- **Shadow**: Ellipse at base (grounded look for meteorite)
+
+---
+
+## 🖥️ UI / HUD
+
+### Typography
+- **HUD titles/labels**: Orbitron (Google Font), geometric sci-fi
+- **Enemy words**: Monospace (system), maximum readability for kids learning to type
+
+### HUD Layout
+- **Score**: `SCORE 150` in cyan `#00E5FF`, top-left, Orbitron 18px
+- **Level**: `LV.3` in gold `#FFD740`, bottom-left, Orbitron 14px
+- **XP Bar**: Thin line (4px) across screen top. Background `#1E1E3F`, fill cyan `#00E5FF`
+- **Heat Bar**: 5 segments, bottom-right. Background `#1E1E3F` with cyan border strokes (0.3 opacity). Active: orange `#FF9100`, Overheat: red `#FF3D00`
+- **Weapon HUD**: Cannon sprite top-right (see weapon-base.svg)
+
+### Level Up Screen
+- **Overlay**: Deep space `#0B0E2A` at 85% opacity
+- **Title**: `LEVEL UP!` in cyan bold Orbitron 40px
+- **Cards**: 3 choice rectangles `#1E1E3F` at 95% opacity, 2px cyan border (0.6 opacity). White Orbitron text
+- **Selection**: Number keys [1] [2] [3]
+
+### Game Over Screen
+- **Panel**: `#0B0E2A` at 88% opacity, 2px cyan border
+- **Brand**: `ASTROTYPE` in cyan Orbitron 18px
+- **Title**: `GAME OVER` in red `#FF5252` bold Orbitron 34px
+- **Score**: `SCORE  N` in gold `#FFD740` Orbitron 22px
+- **Restart**: `[R]  RESTART` in white Orbitron 16px
+- **Corners**: 4 cyan dot accents at panel corners
+
+---
+
+## 📐 ViewBox & Scale System
+
+All viewBox sizes match the original assets for zero-config Phaser scaling.
+
+| Asset | viewBox | Display size (game) |
 |-------|---------|---------------------|
-| Robot | 64×80 | ~50×63 px |
-| Enemigo robot | 48×48 | ~60×60 px |
-| Enemigo bug | 56×48 | ~60×52 px |
-| Arma | 80×40 | ~80×40 px |
-| Tuerca | 32×32 | ~24×24 px |
-| Bala | 12×24 | ~4×12 px |
-| Tile piso | 128×128 | 128×128 px (tile) |
-| Árbol | 80×100 | ~60×75 px |
-| Nube | 120×60 | ~90×45 px |
+| Player ship | 64×80 | ~50×63 px |
+| Enemy fighter | 48×48 | ~60×60 px |
+| Enemy scout | 56×48 | ~60×52 px |
+| Laser | 12×24 | ~4×12 px |
+| Star collectible | 32×32 | 20×20 px |
+| Starfield tile | 128×128 | 128×128 (tile) |
+| Nebula | 120×60 | ~90×45 px |
+| Planet | 80×110 | ~60×83 px |
+| Asteroid | 72×56 | ~60×47 px |
+| Meteorite | 64×48 | ~60×45 px |
+| Ship cannon | 80×40 | 80×40 px |
 
 ---
 
-## 🎬 Animaciones requeridas por asset
+## 🏗️ Construction Rules (mandatory)
 
-| Asset | Animación | Tipo |
-|-------|-----------|------|
-| Robot | Caminata (piernas, brazos, rebote) | CSS animation loop |
-| Robot | Parpadeo | CSS animation |
-| Robot | Disparo (flash boca cañón) | CSS animation trigger |
-| Enemigo robot | Movimiento pinzas | CSS animation loop |
-| Enemigo bug | Patas + alas | CSS animation loop |
-| Tuerca | Rotación continua | CSS animation loop |
-| Tuerca | Colectada (escala a 0) | CSS animation trigger |
-| Arma | Brillo idle | CSS animation loop |
-| Arma | Retroceso disparo | CSS animation trigger |
-| Level Up title | Escala pulsante | CSS animation loop |
-| Nube | Desplazamiento | Via Phaser tween |
+1. **Only 3 primitives**: `<rect rx>`, `<circle>`, `<ellipse>`. Never `<path>`, `<polygon>`, `<line>`.
+2. **All rects have rx ≥ 2**. No sharp corners.
+3. **No strokes on filled shapes**. Depth from overlapping darker variants.
+4. **Power core** on every ship: nested circles with white dot.
+5. **Shadow ellipses** on grounded assets (ships, meteorite). NOT on floating assets (asteroid, planet, nebula, star, laser).
+6. **Cockpit/eye pattern**: white circle + colored pupil.
+7. **No CSS/SMIL animations**. Static SVGs only (Phaser.CANVAS mode).
+8. **Light source**: Top-left. Highlights offset up-left 2-3px.
+9. **Flat colors**. Maximum 1 gradient (none currently used).
+10. **Includes `<title>` and `<desc>`** for accessibility.
 
 ---
 
-## 🔗 Integración con Phaser
+## 🎨 Colorblind Safety
 
-Los SVGs se cargan como texturas:
-1. Phaser carga el SVG inline o como archivo
-2. Se crea `this.add.image(x, y, 'robot')` 
-3. Las animaciones CSS dentro del SVG se ejecutan automáticamente
-
-Las animaciones de movimiento (posición de balas, enemigos) se manejan con Phaser tweens.
-Las animaciones de personaje (caminata, parpadeo) son CSS dentro del SVG.
+All critical distinctions use SHAPE first, color second:
+- **Player** (cyan, rectangular, wings) vs **Fighter** (red, wide angular, claws) vs **Scout** (magenta, oval, translucent wings)
+- **Laser** (narrow capsule) vs **Star** (cross shape) — shape difference
+- **Heat bar** (bottom-right, orange) vs **XP bar** (top, cyan) — position difference
