@@ -84,6 +84,16 @@ export class GameScene extends Phaser.Scene {
     this.playerImage.setDisplaySize(p.width, p.height);
     this.playerImage.setDepth(10);
 
+    // Player continuous bounce tween (CSS animations lost in Canvas2D)
+    this.tweens.add({
+      targets: this.playerImage,
+      y: p.y - 2,       // bounce up 2px
+      duration: 400,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
     // Weapon HUD (top-right)
     this.weaponImage = this.add.image(
       GameConfig.canvas.width - 50, 28,
@@ -147,15 +157,15 @@ export class GameScene extends Phaser.Scene {
 
     const gs = this.gameState;
 
-    // Background scroll
+    // Background scroll — scroll toward the player (world moves toward camera)
     const scrollSpeed = GameConfig.world.scrollSpeed;
-    this.tileSprite.tilePositionY += scrollSpeed * (delta / 1000);
+    this.tileSprite.tilePositionY -= scrollSpeed * (delta / 1000);
 
-    // Parallax movement
+    // Parallax movement — items drift upward (world scrolls toward player @ bottom)
     for (const item of this.parallaxItems) {
-      item.image.y += scrollSpeed * item.speed * (delta / 1000);
-      if (item.image.y > GameConfig.canvas.height + 60) {
-        item.image.y = -60;
+      item.image.y -= scrollSpeed * item.speed * (delta / 1000);
+      if (item.image.y < -60) {
+        item.image.y = GameConfig.canvas.height + 60;
         item.image.x = Phaser.Math.Between(20, GameConfig.canvas.width - 20);
       }
     }
@@ -246,11 +256,22 @@ export class GameScene extends Phaser.Scene {
 
   private spawnProjectile(): void {
     const p = this.gameState.player;
+    const texW = GameConfig.shooting.projectileWidth;
+    const texH = GameConfig.shooting.projectileHeight;
+
+    // Fallback: if bullet texture fails, draw a green rectangle
+    if (!this.textures.exists('bullet')) {
+      const rect = this.add.rectangle(p.x, p.y - p.height / 2, texW, texH, 0x00ff88);
+      rect.setDepth(15);
+      this.projectiles.push({
+        image: rect as unknown as Phaser.GameObjects.Image,
+        targetId: this.gameState.targetedEnemyId!,
+      });
+      return;
+    }
+
     const img = this.add.image(p.x, p.y - p.height / 2, 'bullet');
-    img.setDisplaySize(
-      GameConfig.shooting.projectileWidth,
-      GameConfig.shooting.projectileHeight,
-    );
+    img.setDisplaySize(texW, texH);
     img.setDepth(15);
     this.projectiles.push({
       image: img,
@@ -260,11 +281,22 @@ export class GameScene extends Phaser.Scene {
 
   private spawnSecondaryProjectile(): void {
     const p = this.gameState.player;
+    const texW = GameConfig.shooting.projectileWidth;
+    const texH = GameConfig.shooting.projectileHeight;
+
+    // Fallback: if bullet texture fails, draw a green rectangle
+    if (!this.textures.exists('bullet')) {
+      const rect = this.add.rectangle(p.x + 8, p.y - p.height / 2, texW, texH, 0x00ff88);
+      rect.setDepth(15);
+      this.projectiles.push({
+        image: rect as unknown as Phaser.GameObjects.Image,
+        targetId: this.gameState.secondaryTargetId!,
+      });
+      return;
+    }
+
     const img = this.add.image(p.x + 8, p.y - p.height / 2, 'bullet');
-    img.setDisplaySize(
-      GameConfig.shooting.projectileWidth,
-      GameConfig.shooting.projectileHeight,
-    );
+    img.setDisplaySize(texW, texH);
     img.setDepth(15);
     this.projectiles.push({
       image: img,
@@ -313,6 +345,14 @@ export class GameScene extends Phaser.Scene {
     const gear = this.add.image(x, y, 'gear');
     gear.setDisplaySize(20, 20);
     gear.setDepth(8);
+    // Continuous rotation (CSS animations lost in Canvas2D)
+    this.tweens.add({
+      targets: gear,
+      angle: 360,
+      duration: 2000,
+      repeat: -1,
+    });
+    // Float up and fade out
     this.tweens.add({
       targets: gear,
       y: y - 25,
@@ -365,6 +405,16 @@ export class GameScene extends Phaser.Scene {
 
         render = { image: img, text, textBg };
         this.enemyRenderMap.set(enemy.id, render);
+
+        // Subtle sway tween per enemy (CSS animations lost in Canvas2D)
+        this.tweens.add({
+          targets: img,
+          angle: { from: -3, to: 3 },
+          duration: 600 + Math.random() * 400,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
       }
 
       render.image.setPosition(enemy.x, enemy.y);

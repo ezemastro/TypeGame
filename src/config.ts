@@ -46,8 +46,8 @@ export const GameConfig = Object.freeze({
     cooldown: 200,       // ms between shots
     projectileSpeed: 600,
     projectileColor: '#00ff88',
-    projectileWidth: 4,
-    projectileHeight: 12,
+    projectileWidth: 6,
+    projectileHeight: 18,
   },
 
   // Heat Bar (Anti-spam)
