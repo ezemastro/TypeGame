@@ -145,6 +145,11 @@ export class GameScene extends Phaser.Scene {
         }
         return;
       }
+      // Debug: instant level-up
+      if ((event.key === 'l' || event.key === 'L') && !this.gameState.isPaused) {
+        this.gameState.xp = this.gameState.xpToNextLevel;
+        return;
+      }
       if (this.gameState.isPaused) return;
       if (event.key.length === 1 && /^[A-Za-z]$/.test(event.key)) {
         this.gameState.pendingKeys.push(event.key.toUpperCase());
