@@ -19,7 +19,9 @@ export function combatSystem(state: GameState, delta: number): GameState {
   if (!enemy) return state;
 
   // Strip first letter and award points
+  const strippedLetter = enemy.word[0];
   enemy.word = enemy.word.slice(1);
+  state.forgivenKeys.push({ key: strippedLetter, expiresAt: state.elapsedTime + 1000 });
   const pointsPerLetter = state.activePowerUps.includes('SHARP_SIGHT')
     ? Math.floor(GameConfig.scoring.pointsPerLetter * GameConfig.powerUps.sharpSight.scoreMultiplier)
     : GameConfig.scoring.pointsPerLetter;
@@ -88,7 +90,9 @@ export function combatSystem(state: GameState, delta: number): GameState {
 
         if (dot > 0.96) {
           // Piercing hit: strip first letter, no points, no pendingDestruction
+          const pierceLetter = other.word[0];
           other.word = other.word.slice(1);
+          state.forgivenKeys.push({ key: pierceLetter, expiresAt: state.elapsedTime + 1000 });
           break; // only one pierce per shot
         }
       }
@@ -125,7 +129,9 @@ export function combatSystem(state: GameState, delta: number): GameState {
 
     if (closestEnemy) {
       state.secondaryTargetId = closestEnemy.id;
+      const dualLetter = closestEnemy.word[0];
       closestEnemy.word = closestEnemy.word.slice(1);
+      state.forgivenKeys.push({ key: dualLetter, expiresAt: state.elapsedTime + 1000 });
       if (closestEnemy.word.length === 0) {
         closestEnemy.pendingDestruction = true;
       }

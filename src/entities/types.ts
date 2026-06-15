@@ -34,6 +34,7 @@ export interface GameState {
   isPaused: boolean;
   levelUpChoices: PowerUpChoice[];
   secondaryTargetId: number | null;
+  forgivenKeys: Array<{ key: string; expiresAt: number }>;
 }
 
 export function createInitialGameState(): GameState {
@@ -63,5 +64,6 @@ export function createInitialGameState(): GameState {
     isPaused: false,
     levelUpChoices: [],
     secondaryTargetId: null,
+    forgivenKeys: [],
   };
 }

@@ -126,6 +126,18 @@ export class GameScene extends Phaser.Scene {
       gs.lastKeyPressed = key;
       targetSystem(gs);
 
+      // Forgiveness: if the key doesn't match any current enemy but it was
+      // recently destroyed by a power-up (Piercing Shot, Dual Shot, etc.),
+      // treat it as forgiven — consume the key silently, no heat.
+      if (gs.targetedEnemyId === null) {
+        const fi = gs.forgivenKeys.findIndex((f) => f.key === key);
+        if (fi !== -1) {
+          gs.forgivenKeys.splice(fi, 1);
+          gs.pendingKeys.shift();
+          continue; // skip combat/heat for this forgiven key
+        }
+      }
+
       const hadTarget = gs.targetedEnemyId !== null;
       combatSystem(gs, delta);
 
@@ -138,6 +150,10 @@ export class GameScene extends Phaser.Scene {
 
     heatBarSystem(gs, delta);
     difficultySystem(gs, delta);
+
+    // Clean up expired forgiven keys (older than 1 second)
+    gs.forgivenKeys = gs.forgivenKeys.filter((f) => f.expiresAt > gs.elapsedTime);
+
     xpSystem(gs);
     scoreSystem(gs);
     collisionSystem(gs);
