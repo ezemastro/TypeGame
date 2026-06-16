@@ -349,9 +349,10 @@ export class GameScene extends Phaser.Scene {
     scoreSystem(gs);
     collisionSystem(gs);
 
-    // Clean up zombie enemies: word empty + pendingDestruction but still alive
+    // Clean up zombie enemies with no projectiles heading to them
+    const targetedIds = new Set(this.projectiles.map(p => p.targetId));
     for (const enemy of gs.enemies) {
-      if (enemy.alive && enemy.word.length === 0 && enemy.pendingDestruction) {
+      if (enemy.alive && enemy.word.length === 0 && enemy.pendingDestruction && !targetedIds.has(enemy.id)) {
         enemy.alive = false;
         gs.gearDropped = true;
         this.spawnStar(enemy.x, enemy.y);
