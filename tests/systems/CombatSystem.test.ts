@@ -256,8 +256,8 @@ describe('CombatSystem', () => {
     });
   });
 
-  describe('Piercing Shot power-up', () => {
-    it('should pierce and strip letter from enemy behind at same angle', () => {
+  describe('Piercing Shot power-up (redesigned — Path A removed)', () => {
+    it('should ONLY strip primary target letter, not secondary enemies', () => {
       const primary = createEnemy('SOL', 1);
       primary.x = 200;
       primary.y = 300;
@@ -279,18 +279,18 @@ describe('CombatSystem', () => {
 
       // Primary: S stripped → 'OL'
       expect(state.enemies[0].word).toBe('OL');
-      // Behind: S stripped → 'AL' (pierced)
-      expect(state.enemies[1].word).toBe('AL');
-      // Behind gets no extra points
+      // Behind: NOT affected by CombatSystem (pierce damage moved to projectile-hit)
+      expect(state.enemies[1].word).toBe('SAL');
+      // Only primary target scores points
       expect(state.score).toBe(GameConfig.scoring.pointsPerLetter);
     });
 
-    it('should NOT pierce enemy at significantly different angle', () => {
+    it('should NOT affect any secondary enemy regardless of position', () => {
       const primary = createEnemy('SOL', 1);
-      primary.x = 200; // to the left
+      primary.x = 200;
       primary.y = 300;
       const offAngle = createEnemy('SAL', 2);
-      offAngle.x = 600; // to the right — very different angle
+      offAngle.x = 600;
       offAngle.y = 300;
       const state = makeState(
         [primary, offAngle],
@@ -304,13 +304,12 @@ describe('CombatSystem', () => {
 
       combatSystem(state, 0);
 
-      // Primary stripped
       expect(state.enemies[0].word).toBe('OL');
-      // Off-angle NOT pierced
+      // All secondary enemies unchanged
       expect(state.enemies[1].word).toBe('SAL');
     });
 
-    it('should NOT pierce enemy behind that starts with different letter', () => {
+    it('should NOT affect secondary enemy with different starting letter', () => {
       const primary = createEnemy('SOL', 1);
       primary.x = 200;
       primary.y = 300;
@@ -330,11 +329,10 @@ describe('CombatSystem', () => {
       combatSystem(state, 0);
 
       expect(state.enemies[0].word).toBe('OL');
-      // Different starting letter → NOT pierced
       expect(state.enemies[1].word).toBe('LUZ');
     });
 
-    it('should NOT pierce without PIERCING_SHOT active', () => {
+    it('should behave identically without PIERCING_SHOT (no effect on secondary)', () => {
       const primary = createEnemy('SOL', 1);
       primary.x = 200;
       primary.y = 300;
@@ -357,7 +355,7 @@ describe('CombatSystem', () => {
       expect(state.enemies[1].word).toBe('SAL');
     });
 
-    it('should NOT set pendingDestruction on pierced enemy even if word emptied', () => {
+    it('should NOT set pendingDestruction on any secondary enemy', () => {
       const primary = createEnemy('SOL', 1);
       primary.x = 200;
       primary.y = 300;
@@ -378,11 +376,10 @@ describe('CombatSystem', () => {
 
       // Primary stripped
       expect(state.enemies[0].word).toBe('OL');
-      // Behind emptied but NOT marked for destruction
-      expect(state.enemies[1].word).toBe('');
+      // Behind should NOT be affected at all — word unchanged
+      expect(state.enemies[1].word).toBe('S');
       expect(state.enemies[1].alive).toBe(true);
       expect(state.enemies[1].pendingDestruction).toBe(false);
-      expect(state.gearDropped).toBe(false);
     });
   });
 

@@ -15,6 +15,7 @@ import { createHUD, type HUD } from '../ui/HUD';
 import { showGameOver, type GameOverScreen } from '../ui/GameOverScreen';
 import { showLevelUp, type LevelUpScreen } from '../ui/LevelUpScreen';
 import { GameConfig } from '../config';
+import { getRicochetBounces, getPiercingCount, calculatePierceDistance, findNearestEnemyToPosition } from '../systems/ProjectileHelpers';
 
 interface EnemyRender {
   image: Phaser.GameObjects.Image;
@@ -26,6 +27,13 @@ interface ProjectileRender {
   image: Phaser.GameObjects.Image;
   glow: Phaser.GameObjects.Image;
   targetId: number;
+  bouncesLeft: number;
+  bounceTimer: number;
+  pierceDistanceLeft: number;
+  isPiercing: boolean;
+  pierceDirX: number;
+  pierceDirY: number;
+  hasHitPrimary: boolean;
 }
 
 type ParallaxType = 'nebula' | 'ground';
@@ -40,6 +48,7 @@ export class GameScene extends Phaser.Scene {
   private gameState!: GameState;
   private playerImage!: Phaser.GameObjects.Image;
   private shipPiercing!: Phaser.GameObjects.Image;
+  private shipRicochet!: Phaser.GameObjects.Image;
   private shipExplosive!: Phaser.GameObjects.Image;
   private shipDual!: Phaser.GameObjects.Image;
   private shipCooling!: Phaser.GameObjects.Image;
@@ -99,6 +108,9 @@ export class GameScene extends Phaser.Scene {
     // Ship power-up overlays (hidden until power-up active, follow player position)
     this.shipPiercing = this.add.image(p.x, p.y, 'ship-piercing');
     this.shipPiercing.setScale(playerScale).setDepth(11).setVisible(false);
+
+    this.shipRicochet = this.add.image(p.x, p.y, 'ship-ricochet');
+    this.shipRicochet.setScale(playerScale * 0.8).setDepth(11).setVisible(false);
 
     this.shipExplosive = this.add.image(p.x, p.y, 'ship-explosive');
     this.shipExplosive.setScale(playerScale).setDepth(11).setVisible(false);
@@ -332,6 +344,13 @@ export class GameScene extends Phaser.Scene {
         image: rect as unknown as Phaser.GameObjects.Image,
         glow: glow as unknown as Phaser.GameObjects.Image,
         targetId: this.gameState.targetedEnemyId!,
+        bouncesLeft: getRicochetBounces(this.gameState.activePowerUps),
+        bounceTimer: 0,
+        pierceDistanceLeft: 0,
+        isPiercing: false,
+        pierceDirX: 0,
+        pierceDirY: 0,
+        hasHitPrimary: false,
       });
       return;
     }
@@ -351,6 +370,13 @@ export class GameScene extends Phaser.Scene {
       image: img,
       glow,
       targetId: this.gameState.targetedEnemyId!,
+      bouncesLeft: getRicochetBounces(this.gameState.activePowerUps),
+      bounceTimer: 0,
+      pierceDistanceLeft: 0,
+      isPiercing: false,
+      pierceDirX: 0,
+      pierceDirY: 0,
+      hasHitPrimary: false,
     });
   }
 
@@ -372,6 +398,13 @@ export class GameScene extends Phaser.Scene {
         image: rect as unknown as Phaser.GameObjects.Image,
         glow: glow as unknown as Phaser.GameObjects.Image,
         targetId: this.gameState.secondaryTargetId!,
+        bouncesLeft: 0,
+        bounceTimer: 0,
+        pierceDistanceLeft: 0,
+        isPiercing: false,
+        pierceDirX: 0,
+        pierceDirY: 0,
+        hasHitPrimary: false,
       });
       return;
     }
@@ -391,16 +424,78 @@ export class GameScene extends Phaser.Scene {
       image: img,
       glow,
       targetId: this.gameState.secondaryTargetId!,
+      bouncesLeft: 0,
+      bounceTimer: 0,
+      pierceDistanceLeft: 0,
+      isPiercing: false,
+      pierceDirX: 0,
+      pierceDirY: 0,
+      hasHitPrimary: false,
     });
   }
 
   private updateProjectiles(delta: number): void {
     const deltaSec = delta / 1000;
     const speed = GameConfig.shooting.projectileSpeed;
+    const gs = this.gameState;
 
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const proj = this.projectiles[i];
-      const target = this.gameState.enemies.find(
+
+      // ── Pierce mode: straight-line flight ──────────────────────
+      if (proj.isPiercing) {
+        const moveX = proj.pierceDirX * speed * deltaSec;
+        const moveY = proj.pierceDirY * speed * deltaSec;
+        proj.image.x += moveX;
+        proj.image.y += moveY;
+        proj.glow.x = proj.image.x;
+        proj.glow.y = proj.image.y;
+        proj.pierceDistanceLeft -= Math.sqrt(moveX * moveX + moveY * moveY);
+
+        // Check collision with all enemies during pierce flight
+        let hitEnemy = false;
+        for (const enemy of gs.enemies) {
+          if (!enemy.alive) continue;
+          const ex = enemy.x + enemy.width / 2;
+          const ey = enemy.y + enemy.height / 2;
+          const dx = ex - proj.image.x;
+          const dy = ey - proj.image.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 25) {
+            // Hit! Strip letter
+            const letter = enemy.word[0];
+            enemy.word = enemy.word.slice(1);
+            gs.forgivenKeys.push({ key: letter, expiresAt: gs.elapsedTime + 1000 });
+            if (enemy.word.length === 0) {
+              enemy.pendingDestruction = true;
+            }
+            // Reset pierce distance
+            const pierceCount = getPiercingCount(gs.activePowerUps);
+            const cfg = GameConfig.powerUps.piercingShot;
+            proj.pierceDistanceLeft = calculatePierceDistance(
+              cfg.basePierceDistance,
+              cfg.pierceStackMultiplier,
+              pierceCount,
+            );
+            hitEnemy = true;
+            break;
+          }
+        }
+
+        if (proj.pierceDistanceLeft <= 0 || hitEnemy) {
+          // If hitEnemy, we reset distance above and continue.
+          // If distance exhausted → destroy
+          if (!hitEnemy) {
+            proj.image.destroy();
+            proj.glow.destroy();
+            this.projectiles.splice(i, 1);
+          }
+        }
+        continue;
+      }
+
+      // ── Homing mode ────────────────────────────────────────────
+      const target = gs.enemies.find(
         (e) => e.id === proj.targetId && e.alive,
       );
 
@@ -418,25 +513,90 @@ export class GameScene extends Phaser.Scene {
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < speed * deltaSec) {
+        // ── Hit ──────────────────────────────────────────────
+        // Handle pendingDestruction for primary target
         if (target.pendingDestruction) {
           target.alive = false;
-          this.gameState.gearDropped = true;
+          gs.gearDropped = true;
           this.spawnStar(target.x, target.y);
-          // Explosive Impact VFX
-          if (this.gameState.activePowerUps.includes('EXPLOSIVE_IMPACT')) {
+          if (gs.activePowerUps.includes('EXPLOSIVE_IMPACT')) {
             this.spawnExplosion(target.x, target.y);
           }
         }
+
+        // Strip letter if this is a secondary hit (ricochet bounce target)
+        if (proj.hasHitPrimary) {
+          const letter = target.word[0];
+          target.word = target.word.slice(1);
+          gs.forgivenKeys.push({ key: letter, expiresAt: gs.elapsedTime + 1000 });
+          if (target.word.length === 0) {
+            target.pendingDestruction = true;
+          }
+        }
+        proj.hasHitPrimary = true;
+
+        // ── Ricochet bounce check ───────────────────────────
+        const ricochetCount = getRicochetBounces(gs.activePowerUps);
+        if (ricochetCount > 0 && proj.bouncesLeft > 0) {
+          const cfg = GameConfig.powerUps.ricochet;
+          const nearest = findNearestEnemyToPosition(
+            gs.enemies,
+            proj.image.x,
+            proj.image.y,
+            cfg.bounceSearchRadius,
+          );
+          if (nearest && nearest.id !== target.id) {
+            proj.targetId = nearest.id;
+            proj.bouncesLeft -= 1;
+            proj.bounceTimer = cfg.bounceTravelMs;
+            continue; // don't destroy, keep flying
+          }
+        }
+
+        // ── Pierce entrance (after bounces exhausted) ────────
+        if (proj.bouncesLeft === 0) {
+          const pierceCount = getPiercingCount(gs.activePowerUps);
+          if (pierceCount > 0) {
+            const cfg = GameConfig.powerUps.piercingShot;
+            const pierceDist = calculatePierceDistance(
+              cfg.basePierceDistance,
+              cfg.pierceStackMultiplier,
+              pierceCount,
+            );
+            // Direction from projectile at hit moment
+            const normDx = dx / dist;
+            const normDy = dy / dist;
+            proj.pierceDirX = normDx;
+            proj.pierceDirY = normDy;
+            proj.pierceDistanceLeft = pierceDist;
+            proj.isPiercing = true;
+            continue; // don't destroy, enter pierce mode
+          }
+        }
+
+        // No ricochet, no pierce → destroy projectile
         proj.image.destroy();
         proj.glow.destroy();
         this.projectiles.splice(i, 1);
       } else {
+        // ── Move toward target ──────────────────────────────
         proj.image.x += (dx / dist) * speed * deltaSec;
         proj.image.y += (dy / dist) * speed * deltaSec;
         proj.image.rotation = Math.atan2(dy, dx) + Math.PI / 2;
         proj.glow.x = proj.image.x;
         proj.glow.y = proj.image.y;
         proj.glow.rotation = proj.image.rotation;
+
+        // ── Bounce timer ────────────────────────────────────
+        if (proj.bounceTimer > 0) {
+          proj.bounceTimer -= delta;
+          if (proj.bounceTimer <= 0) {
+            // Timed out — destroy projectile
+            proj.image.destroy();
+            proj.glow.destroy();
+            this.projectiles.splice(i, 1);
+          }
+        }
       }
     }
   }
@@ -630,6 +790,7 @@ export class GameScene extends Phaser.Scene {
     // Player position
     this.playerImage.setPosition(gs.player.x, gs.player.y);
     this.shipPiercing.setPosition(gs.player.x, gs.player.y);
+    this.shipRicochet.setPosition(gs.player.x, gs.player.y);
     this.shipExplosive.setPosition(gs.player.x, gs.player.y);
     this.shipDual.setPosition(gs.player.x, gs.player.y);
     this.shipCooling.setPosition(gs.player.x, gs.player.y);
@@ -666,7 +827,21 @@ export class GameScene extends Phaser.Scene {
 
   private syncShipRendering(): void {
     const gs = this.gameState;
-    this.shipPiercing.setVisible(gs.activePowerUps.includes('PIERCING_SHOT'));
+    const p = gs.player;
+    const playerScale = p.width / this.playerImage.width;
+
+    const ricochetCount = getRicochetBounces(gs.activePowerUps);
+    this.shipRicochet.setVisible(ricochetCount > 0);
+    if (ricochetCount > 0) {
+      this.shipRicochet.setScale(playerScale * (0.8 + ricochetCount * 0.15));
+    }
+
+    const pierceCount = getPiercingCount(gs.activePowerUps);
+    this.shipPiercing.setVisible(pierceCount > 0);
+    if (pierceCount > 0) {
+      this.shipPiercing.setScale(playerScale * (1.0 + pierceCount * 0.2));
+    }
+
     this.shipExplosive.setVisible(gs.activePowerUps.includes('EXPLOSIVE_IMPACT'));
     this.shipDual.setVisible(gs.activePowerUps.includes('DUAL_SHOT'));
     this.shipCooling.setVisible(gs.activePowerUps.includes('QUICK_COOLING'));
@@ -698,6 +873,7 @@ export class GameScene extends Phaser.Scene {
 
     this.playerImage.destroy();
     this.shipPiercing.destroy();
+    this.shipRicochet.destroy();
     this.shipExplosive.destroy();
     this.shipDual.destroy();
     this.shipCooling.destroy();
