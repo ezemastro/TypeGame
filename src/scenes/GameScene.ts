@@ -45,8 +45,7 @@ interface ProjectileRender {
   hasHitPrimary: boolean;
   lastDirX: number;
   lastDirY: number;
-  canKill: boolean;
-  hitEnemyIds: Set<number>;
+  pierceHitsLeft: number;
 }
 
 type ParallaxType = 'nebula' | 'ground';
@@ -444,6 +443,7 @@ export class GameScene extends Phaser.Scene {
         hasHitPrimary: false,
         lastDirX: 0,
         lastDirY: 0,
+        pierceHitsLeft: 0,
         canKill,
         hitEnemyIds: new Set(),
       });
@@ -475,6 +475,7 @@ export class GameScene extends Phaser.Scene {
       hasHitPrimary: false,
         lastDirX: 0,
         lastDirY: 0,
+        pierceHitsLeft: 0,
       canKill,
       hitEnemyIds: new Set(),
     });
@@ -513,6 +514,7 @@ export class GameScene extends Phaser.Scene {
         hasHitPrimary: false,
         lastDirX: 0,
         lastDirY: 0,
+        pierceHitsLeft: 0,
         canKill,
         hitEnemyIds: new Set(),
       });
@@ -544,6 +546,7 @@ export class GameScene extends Phaser.Scene {
       hasHitPrimary: false,
         lastDirX: 0,
         lastDirY: 0,
+        pierceHitsLeft: 0,
       canKill,
       hitEnemyIds: new Set(),
     });
@@ -596,12 +599,20 @@ export class GameScene extends Phaser.Scene {
             if (enemy.word.length > 0) {
               enemy.word = enemy.word.slice(1);
               if (enemy.word.length === 0) {
-                enemy.pendingDestruction = true;
+                enemy.alive = false;
+                gs.gearDropped = true;
+                this.spawnStar(enemy.x, enemy.y);
               }
             }
             proj.hitEnemyIds.add(enemy.id);
-            // Reset pierce distance for chain
-            proj.pierceDistanceLeft = 150 * (1 + 0.5 * pierceCount);
+            proj.pierceHitsLeft -= 1;
+            if (proj.pierceHitsLeft <= 0) {
+              // No more pierce hits — reset distance to destroy
+              proj.pierceDistanceLeft = 0;
+            } else {
+              // Still have hits left — reset distance to find next enemy
+              proj.pierceDistanceLeft = 80;
+            }
             break;
           }
         }
@@ -680,7 +691,8 @@ export class GameScene extends Phaser.Scene {
         const pierceCount = gs.activePowerUps.filter(id => id === 'PIERCING_SHOT').length;
         if (pierceCount > 0 && proj.bouncesLeft <= 0 && !proj.isPiercing) {
           proj.isPiercing = true;
-          proj.pierceDistanceLeft = 150 * (1 + 0.5 * pierceCount);
+          proj.pierceDistanceLeft = 80; // short base distance
+          proj.pierceHitsLeft = pierceCount; // one hit per stack level
           // Use projectile's actual travel direction, not direction to target
           proj.pierceDirX = proj.lastDirX || (dx / dist);
           proj.pierceDirY = proj.lastDirY || (dy / dist);
