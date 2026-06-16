@@ -350,9 +350,12 @@ export class GameScene extends Phaser.Scene {
     collisionSystem(gs);
 
     // Clean up zombie enemies with no projectiles heading to them
+    // Also skip if justFired is true (bullet spawning next frame)
     const targetedIds = new Set(this.projectiles.map(p => p.targetId));
     for (const enemy of gs.enemies) {
       if (enemy.alive && enemy.word.length === 0 && enemy.pendingDestruction && !targetedIds.has(enemy.id)) {
+        // Skip if a bullet was just ordered for this enemy (spawns next frame)
+        if (gs.justFired && gs.targetedEnemyId === enemy.id) continue;
         enemy.alive = false;
         gs.gearDropped = true;
         this.spawnStar(enemy.x, enemy.y);
