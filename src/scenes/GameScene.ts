@@ -349,6 +349,15 @@ export class GameScene extends Phaser.Scene {
     scoreSystem(gs);
     collisionSystem(gs);
 
+    // Clean up zombie enemies: word empty + pendingDestruction but still alive
+    for (const enemy of gs.enemies) {
+      if (enemy.alive && enemy.word.length === 0 && enemy.pendingDestruction) {
+        enemy.alive = false;
+        gs.gearDropped = true;
+        this.spawnStar(enemy.x, enemy.y);
+      }
+    }
+
     gs.enemies = gs.enemies.filter((e) => e.alive);
 
     // Freeze time-scale management (3.4)

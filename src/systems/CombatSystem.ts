@@ -9,14 +9,19 @@ export function combatSystem(state: GameState, delta: number): GameState {
 
   if (state.gameOver || state.overheated) return state;
   if (state.targetedEnemyId === null) return state;
-  if (state.shootCooldown > 0) return state;
 
   // Find the targeted enemy
   const enemy = state.enemies.find(
     (e) => e.id === state.targetedEnemyId && e.alive,
   );
-
   if (!enemy) return state;
+
+  // If enemy already pending destruction, force fire to deliver kill bullet
+  if (enemy.pendingDestruction && state.shootCooldown > 0) {
+    state.shootCooldown = 0;
+  }
+
+  if (state.shootCooldown > 0) return state;
 
   // Strip first letter and award points
   const strippedLetter = enemy.word[0];
