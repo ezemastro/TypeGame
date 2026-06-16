@@ -17,8 +17,8 @@ describe('PowerUpChoice type', () => {
 });
 
 describe('ALL_POWERUPS', () => {
-  it('should contain exactly 6 power-up definitions', () => {
-    expect(ALL_POWERUPS).toHaveLength(6);
+  it('should contain exactly 7 power-up definitions', () => {
+    expect(ALL_POWERUPS).toHaveLength(7);
   });
 
   it('should include EXPLOSIVE_IMPACT', () => {
@@ -58,6 +58,13 @@ describe('ALL_POWERUPS', () => {
     expect(pu).toBeDefined();
     expect(pu!.name).toBe('Doble Arma');
     expect(pu!.description).toBe('Dispara a los dos enemigos más cercanos con la misma letra');
+  });
+
+  it('should include RICOCHET', () => {
+    const pu = ALL_POWERUPS.find((p) => p.id === 'RICOCHET');
+    expect(pu).toBeDefined();
+    expect(pu!.name).toBe('Rebote');
+    expect(pu!.description).toBe('La bala rebota hacia otro enemigo');
   });
 
   it('should have unique IDs', () => {

@@ -31,6 +31,11 @@ export const ALL_POWERUPS: PowerUpChoice[] = [
     name: 'Doble Arma',
     description: 'Dispara a los dos enemigos más cercanos con la misma letra',
   },
+  {
+    id: 'RICOCHET',
+    name: 'Rebote',
+    description: 'La bala rebota hacia otro enemigo',
+  },
 ];
 
 export function getRandomChoices(count: number): PowerUpChoice[] {

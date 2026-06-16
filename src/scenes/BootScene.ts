@@ -9,6 +9,7 @@ export class BootScene extends Phaser.Scene {
     // Load all SVG game assets as images
     this.load.image('player-ship', 'assets/player-ship.svg');
     this.load.image('ship-piercing', 'assets/ship-piercing.svg');
+    this.load.image('ship-ricochet', 'assets/ship-ricochet.svg');
     this.load.image('ship-explosive', 'assets/ship-explosive.svg');
     this.load.image('ship-dual', 'assets/ship-dual.svg');
     this.load.image('ship-cooling', 'assets/ship-cooling.svg');

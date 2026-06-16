@@ -94,7 +94,7 @@ export const GameConfig = Object.freeze({
   // Power-ups
   powerUps: {
     choicesPerLevel: 3,
-    options: ['EXPLOSIVE_IMPACT', 'PIERCING_SHOT', 'SLOW_AURA', 'QUICK_COOLING', 'SHARP_SIGHT', 'DUAL_SHOT'],
+    options: ['EXPLOSIVE_IMPACT', 'PIERCING_SHOT', 'SLOW_AURA', 'QUICK_COOLING', 'SHARP_SIGHT', 'DUAL_SHOT', 'RICOCHET'],
     explosiveImpact: {
       pushRadius: 150,
       pushStrength: 100,
@@ -113,6 +113,12 @@ export const GameConfig = Object.freeze({
     },
     piercingShot: {
       enabled: true,
+      basePierceDistance: 150,
+      pierceStackMultiplier: 0.5,
+    },
+    ricochet: {
+      bounceTravelMs: 500,
+      bounceSearchRadius: 200,
     },
     dualShot: {
       maxTargets: 2,

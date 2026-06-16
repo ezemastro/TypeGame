@@ -79,9 +79,17 @@ describe('GameConfig', () => {
     expect(GameConfig.powerUps.slowingAura.alpha).toBe(0.15);
   });
 
-  it('should have piercingShot config with enabled flag', () => {
+  it('should have piercingShot config with enabled, basePierceDistance, and pierceStackMultiplier', () => {
     expect(GameConfig.powerUps.piercingShot).toBeDefined();
     expect(GameConfig.powerUps.piercingShot.enabled).toBe(true);
+    expect(GameConfig.powerUps.piercingShot.basePierceDistance).toBe(150);
+    expect(GameConfig.powerUps.piercingShot.pierceStackMultiplier).toBe(0.5);
+  });
+
+  it('should have ricochet config with bounceTravelMs and bounceSearchRadius', () => {
+    expect(GameConfig.powerUps.ricochet).toBeDefined();
+    expect(GameConfig.powerUps.ricochet.bounceTravelMs).toBe(500);
+    expect(GameConfig.powerUps.ricochet.bounceSearchRadius).toBe(200);
   });
 
   it('should have dualShot config with maxTargets', () => {
@@ -89,11 +97,12 @@ describe('GameConfig', () => {
     expect(GameConfig.powerUps.dualShot.maxTargets).toBe(2);
   });
 
-  it('should include all 6 power-up IDs in options array', () => {
+  it('should include all 7 power-up IDs in options array', () => {
+    expect(GameConfig.powerUps.options).toContain('RICOCHET');
     expect(GameConfig.powerUps.options).toContain('SLOW_AURA');
     expect(GameConfig.powerUps.options).toContain('PIERCING_SHOT');
     expect(GameConfig.powerUps.options).toContain('DUAL_SHOT');
-    expect(GameConfig.powerUps.options).toHaveLength(6);
+    expect(GameConfig.powerUps.options).toHaveLength(7);
   });
 
   it('should be frozen (readonly) at runtime', () => {
