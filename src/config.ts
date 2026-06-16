@@ -113,7 +113,7 @@ export const GameConfig = Object.freeze({
     },
     piercingShot: {
       enabled: true,
-      basePierceDistance: 150,
+      basePierceDistance: 80,
       pierceStackMultiplier: 0.5,
     },
     ricochet: {

@@ -82,7 +82,7 @@ describe('GameConfig', () => {
   it('should have piercingShot config with enabled, basePierceDistance, and pierceStackMultiplier', () => {
     expect(GameConfig.powerUps.piercingShot).toBeDefined();
     expect(GameConfig.powerUps.piercingShot.enabled).toBe(true);
-    expect(GameConfig.powerUps.piercingShot.basePierceDistance).toBe(150);
+    expect(GameConfig.powerUps.piercingShot.basePierceDistance).toBe(80);
     expect(GameConfig.powerUps.piercingShot.pierceStackMultiplier).toBe(0.5);
   });
 

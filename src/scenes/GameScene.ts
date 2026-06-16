@@ -597,6 +597,7 @@ export class GameScene extends Phaser.Scene {
         // Check collision with all enemies during pierce
         const gs = this.gameState;
         const pierceCount = gs.activePowerUps.filter(id => id === 'PIERCING_SHOT').length;
+        const pierceCfg = GameConfig.powerUps.piercingShot;
         for (const enemy of gs.enemies) {
           if (!enemy.alive || enemy.id === proj.targetId || proj.hitEnemyIds.has(enemy.id)) continue;
           const ex = enemy.x;
@@ -620,7 +621,7 @@ export class GameScene extends Phaser.Scene {
               proj.pierceDistanceLeft = 0;
             } else {
               // Still have hits left — reset distance scaled by stack count
-              proj.pierceDistanceLeft = 80 * (1 + 0.5 * pierceCount);
+              proj.pierceDistanceLeft = pierceCfg.basePierceDistance * (1 + pierceCfg.pierceStackMultiplier * pierceCount);
             }
             break;
           }
@@ -708,11 +709,11 @@ export class GameScene extends Phaser.Scene {
 
         // PIERCING_SHOT: straight-line pierce after bounces exhausted
         const pierceCount = gs.activePowerUps.filter(id => id === 'PIERCING_SHOT').length;
+        const pierceCfg = GameConfig.powerUps.piercingShot;
         if (pierceCount > 0 && proj.bouncesLeft <= 0 && !proj.isPiercing) {
           proj.isPiercing = true;
-          proj.pierceDistanceLeft = 80 * (1 + 0.5 * pierceCount);
-          proj.pierceHitsLeft = pierceCount; // one hit per stack level
-          // Use projectile's actual travel direction, not direction to target
+          proj.pierceDistanceLeft = pierceCfg.basePierceDistance * (1 + pierceCfg.pierceStackMultiplier * pierceCount);
+          proj.pierceHitsLeft = pierceCount;
           proj.pierceDirX = proj.lastDirX || (dx / dist);
           proj.pierceDirY = proj.lastDirY || (dy / dist);
           continue;
