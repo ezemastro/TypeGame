@@ -696,6 +696,14 @@ export class GameScene extends Phaser.Scene {
             proj.bounceTimer = 500;
             continue;
           }
+          // No enemy to bounce to — continue straight like pierce
+          proj.isPiercing = true;
+          proj.pierceDistanceLeft = proj.bouncesLeft * 80;
+          proj.pierceHitsLeft = 0; // no more hits, just flying
+          proj.pierceDirX = proj.lastDirX || (dx / dist);
+          proj.pierceDirY = proj.lastDirY || (dy / dist);
+          proj.bouncesLeft = 0;
+          continue;
         }
 
         // PIERCING_SHOT: straight-line pierce after bounces exhausted
