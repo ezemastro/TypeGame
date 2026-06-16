@@ -636,8 +636,8 @@ export class GameScene extends Phaser.Scene {
             // Explosive push tween: push enemies within 150px (3.2)
             this.applyExplosivePush(target.x + target.width / 2, target.y + target.height / 2);
           }
-        } else if (proj.hasHitPrimary || proj.bouncesLeft >= 0) {
-          // Bounce/pierce hit: strip first letter of target (no points for balance)
+        } else if (proj.hasHitPrimary) {
+          // Bounce/pierce hit (already hit primary): strip first letter of secondary target
           if (target.word.length > 0) {
             target.word = target.word.slice(1);
             if (target.word.length === 0) {
