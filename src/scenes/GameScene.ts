@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import type { GameState } from '../entities/types';
-import type { EnemyState } from '../entities/Enemy';
 import { createInitialGameState } from '../entities/types';
 import { createPlayer } from '../entities/Player';
 import { spawnSystem } from '../systems/SpawnSystem';
@@ -20,28 +19,11 @@ import {
   getShieldCircleRadii,
   mapDevKeyToPowerUp,
 } from '../systems/PowerUpHelpers';
+import { findNearestEnemy } from '../systems/ProjectileHelpers';
 import { createHUD, type HUD } from '../ui/HUD';
 import { showGameOver, type GameOverScreen } from '../ui/GameOverScreen';
 import { showLevelUp, type LevelUpScreen } from '../ui/LevelUpScreen';
 import { GameConfig } from '../config';
-
-function findNearestEnemy(state: GameState, cx: number, cy: number, excludeId: number): EnemyState | null {
-  let nearest: EnemyState | null = null;
-  let nearestDist = Infinity;
-  for (const enemy of state.enemies) {
-    if (!enemy.alive || enemy.id === excludeId) continue;
-    const ex = enemy.x + enemy.width / 2;
-    const ey = enemy.y + enemy.height / 2;
-    const dx = ex - cx;
-    const dy = ey - cy;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    if (dist < nearestDist) {
-      nearestDist = dist;
-      nearest = enemy;
-    }
-  }
-  return nearest;
-}
 
 interface EnemyRender {
   image: Phaser.GameObjects.Image;
@@ -63,6 +45,8 @@ interface ProjectileRender {
   hasHitPrimary: boolean;
   lastDirX: number;
   lastDirY: number;
+  canKill: boolean;
+  hitEnemyIds: Set<number>;
 }
 
 type ParallaxType = 'nebula' | 'ground';
@@ -411,28 +395,31 @@ export class GameScene extends Phaser.Scene {
     const originX = gs.player.x;
     const originY = gs.player.y - gs.player.height / 2;
 
+    // Look up target to determine canKill from pendingDestruction
+    const target = gs.enemies.find((e) => e.id === gs.targetedEnemyId && e.alive);
+    const canKill = target?.pendingDestruction ?? false;
+
     // Burst fire: spawn two projectiles at slight angle offset (3.3)
     if (gs.activePowerUps.includes('BURST_FIRE') && gs.targetedEnemyId !== null) {
       const spreadDeg = GameConfig.powerUps.burstFire.spreadDegrees;
       // Compute base angle from player to target for direction offset
-      const target = gs.enemies.find((e) => e.id === gs.targetedEnemyId && e.alive);
       if (target) {
         const baseAngle = Math.atan2(
-          (target.y + target.height / 2) - gs.player.y,
-          (target.x + target.width / 2) - gs.player.x,
+          (target.y) - gs.player.y,
+          (target.x) - gs.player.x,
         );
         const [angleA, angleB] = calculateBurstAngles(baseAngle, spreadDeg);
-        this.createProjectileAt(originX, originY, gs.targetedEnemyId, angleA);
-        this.createProjectileAt(originX + 4, originY, gs.targetedEnemyId, angleB);
+        this.createProjectileAt(originX, originY, gs.targetedEnemyId, canKill, angleA);
+        this.createProjectileAt(originX + 4, originY, gs.targetedEnemyId, canKill, angleB);
         return;
       }
     }
 
-    this.createProjectileAt(originX, originY, gs.targetedEnemyId!);
+    this.createProjectileAt(originX, originY, gs.targetedEnemyId!, canKill);
   }
 
   /** Create a single projectile at origin targeting enemyId. */
-  private createProjectileAt(originX: number, originY: number, targetId: number, _angle?: number): void {
+  private createProjectileAt(originX: number, originY: number, targetId: number, canKill: boolean, _angle?: number): void {
     const texW = GameConfig.shooting.projectileWidth;
     const texH = GameConfig.shooting.projectileHeight;
 
@@ -457,6 +444,8 @@ export class GameScene extends Phaser.Scene {
         hasHitPrimary: false,
         lastDirX: 0,
         lastDirY: 0,
+        canKill,
+        hitEnemyIds: new Set(),
       });
       return;
     }
@@ -486,15 +475,22 @@ export class GameScene extends Phaser.Scene {
       hasHitPrimary: false,
         lastDirX: 0,
         lastDirY: 0,
+      canKill,
+      hitEnemyIds: new Set(),
     });
   }
 
   private spawnSecondaryProjectile(): void {
     const p = this.gameState.player;
+    const gs = this.gameState;
     const texW = GameConfig.shooting.projectileWidth;
     const texH = GameConfig.shooting.projectileHeight;
     const originX = p.x + 8;
     const originY = p.y - p.height / 2;
+
+    // Determine canKill from secondary target's pendingDestruction
+    const secTarget = gs.enemies.find((e) => e.id === gs.secondaryTargetId && e.alive);
+    const canKill = secTarget?.pendingDestruction ?? false;
 
     // Fallback: if laser texture fails, create a cyan energy bolt
     if (!this.textures.exists('laser')) {
@@ -517,6 +513,8 @@ export class GameScene extends Phaser.Scene {
         hasHitPrimary: false,
         lastDirX: 0,
         lastDirY: 0,
+        canKill,
+        hitEnemyIds: new Set(),
       });
       return;
     }
@@ -546,6 +544,8 @@ export class GameScene extends Phaser.Scene {
       hasHitPrimary: false,
         lastDirX: 0,
         lastDirY: 0,
+      canKill,
+      hitEnemyIds: new Set(),
     });
   }
 
@@ -560,10 +560,15 @@ export class GameScene extends Phaser.Scene {
       if (proj.bounceTimer > 0) {
         proj.bounceTimer -= delta;
         if (proj.bounceTimer <= 0) {
-          proj.image.destroy();
-          proj.glow.destroy();
-          this.projectiles.splice(i, 1);
-          continue;
+          // Timer expired: find new target and resume flight (don't destroy)
+          const gs = this.gameState;
+          const nearest = findNearestEnemy(gs.enemies, proj.image.x, proj.image.y, proj.hitEnemyIds);
+          if (nearest) {
+            proj.targetId = nearest.id;
+          }
+          // Fall through to normal homing below
+        } else {
+          continue; // Pause flight during timer
         }
       }
 
@@ -581,9 +586,9 @@ export class GameScene extends Phaser.Scene {
         const gs = this.gameState;
         const pierceCount = gs.activePowerUps.filter(id => id === 'PIERCING_SHOT').length;
         for (const enemy of gs.enemies) {
-          if (!enemy.alive || enemy.id === proj.targetId) continue;
-          const ex = enemy.x + enemy.width / 2;
-          const ey = enemy.y + enemy.height / 2;
+          if (!enemy.alive || enemy.id === proj.targetId || proj.hitEnemyIds.has(enemy.id)) continue;
+          const ex = enemy.x;
+          const ey = enemy.y;
           const edx = ex - proj.image.x;
           const edy = ey - proj.image.y;
           const edist = Math.sqrt(edx * edx + edy * edy);
@@ -594,6 +599,7 @@ export class GameScene extends Phaser.Scene {
                 enemy.pendingDestruction = true;
               }
             }
+            proj.hitEnemyIds.add(enemy.id);
             // Reset pierce distance for chain
             proj.pierceDistanceLeft = 150 * (1 + 0.5 * pierceCount);
             break;
@@ -619,14 +625,17 @@ export class GameScene extends Phaser.Scene {
         continue;
       }
 
-      const tx = target.x + target.width / 2;
-      const ty = target.y + target.height / 2;
+      const tx = target.x;
+      const ty = target.y;
       const dx = tx - proj.image.x;
       const dy = ty - proj.image.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
       if (dist < speed * deltaSec) {
-        if (target.pendingDestruction) {
+        // Track this enemy as already hit by this projectile
+        proj.hitEnemyIds.add(proj.targetId);
+
+        if (target.pendingDestruction && proj.canKill) {
           target.alive = false;
           this.gameState.gearDropped = true;
           this.spawnStar(target.x, target.y);
@@ -634,7 +643,7 @@ export class GameScene extends Phaser.Scene {
           if (this.gameState.activePowerUps.includes('EXPLOSIVE_IMPACT')) {
             this.spawnExplosion(target.x, target.y);
             // Explosive push tween: push enemies within 150px (3.2)
-            this.applyExplosivePush(target.x + target.width / 2, target.y + target.height / 2);
+            this.applyExplosivePush(target.x, target.y);
           }
         } else if (proj.hasHitPrimary) {
           // Bounce/pierce hit (already hit primary): strip first letter of secondary target
@@ -653,13 +662,16 @@ export class GameScene extends Phaser.Scene {
         if (ricochetCount > 0 && proj.bouncesLeft === 0 && !proj.hasHitPrimary) {
           proj.bouncesLeft = ricochetCount;
         }
+
+        // Mark primary hit on ALL projectile types, not just ricochet
+        proj.hasHitPrimary = true;
+
         if (proj.bouncesLeft > 0) {
-          const nearest = findNearestEnemy(gs, proj.image.x, proj.image.y, proj.targetId);
+          const nearest = findNearestEnemy(gs.enemies, proj.image.x, proj.image.y, proj.hitEnemyIds);
           if (nearest) {
             proj.targetId = nearest.id;
             proj.bouncesLeft -= 1;
             proj.bounceTimer = 500;
-            proj.hasHitPrimary = true;
             continue;
           }
         }
@@ -959,8 +971,8 @@ export class GameScene extends Phaser.Scene {
     const pushed = getEnemiesInRadius(gs, cx, cy, cfg.pushRadius);
 
     for (const enemy of pushed) {
-      const ecx = enemy.x + enemy.width / 2;
-      const ecy = enemy.y + enemy.height / 2;
+      const ecx = enemy.x;
+      const ecy = enemy.y;
       const dx = ecx - cx;
       const dy = ecy - cy;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -1155,7 +1167,7 @@ export class GameScene extends Phaser.Scene {
             if (gs.gameOver || gs.isPaused) return;
             const target = findNthClosestEnemy(gs, px, py, 2);
             if (target) {
-              this.createProjectileAt(container.x, container.y, target.id);
+              this.createProjectileAt(container.x, container.y, target.id, target.pendingDestruction ?? false);
             }
           },
         });

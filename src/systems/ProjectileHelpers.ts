@@ -55,3 +55,30 @@ export function calculatePierceDistance(
 ): number {
   return baseDistance * (1 + stackMultiplier * pierceCount);
 }
+
+/**
+ * Find the nearest alive enemy to a given position, excluding enemies whose IDs
+ * are in the excludeIds set. No search radius — finds the absolute nearest.
+ */
+export function findNearestEnemy(
+  enemies: EnemyState[],
+  cx: number,
+  cy: number,
+  excludeIds: Set<number>,
+): EnemyState | null {
+  let nearest: EnemyState | null = null;
+  let nearestDist = Infinity;
+  for (const enemy of enemies) {
+    if (!enemy.alive || excludeIds.has(enemy.id)) continue;
+    const ex = enemy.x + enemy.width / 2;
+    const ey = enemy.y + enemy.height / 2;
+    const dx = ex - cx;
+    const dy = ey - cy;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < nearestDist) {
+      nearestDist = dist;
+      nearest = enemy;
+    }
+  }
+  return nearest;
+}
