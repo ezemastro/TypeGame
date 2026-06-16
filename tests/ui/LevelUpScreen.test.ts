@@ -170,7 +170,7 @@ describe('LevelUpScreen', () => {
       const knownColors = [
         '#FF5252', '#448AFF', '#FFD740', '#7C4DFF', '#69F0AE',
         '#FF6E40', '#00BCD4', '#FF6B6B', '#40C4FF', '#FFAB40',
-        '#E040FB', '#80DEEA',
+        '#E040FB', '#80DEEA', '#FF9100',
       ];
       expect(knownColors).toHaveLength(ALL_POWERUPS.length);
     });

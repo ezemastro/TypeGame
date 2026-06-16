@@ -23,6 +23,7 @@ const ICON_COLORS: Record<string, string> = {
   BURST_FIRE: '#FFAB40',
   LIFE_STEAL: '#E040FB',
   FREEZE: '#80DEEA',
+  RICOCHET: '#FF9100',
 };
 
 /** Draw a Circle World icon for a powerup on a Graphics object. */
@@ -138,6 +139,19 @@ function drawPowerUpIcon(gfx: Phaser.GameObjects.Graphics, powerUpId: string): v
       }
       gfx.fillStyle(color, 0.5);
       gfx.fillCircle(0, 0, 4);
+      break;
+    case 'RICOCHET':
+      // Bouncing ball: circle with zigzag path
+      gfx.fillStyle(color, 0.7);
+      gfx.fillCircle(0, 0, 9);
+      gfx.lineStyle(2, color, 0.6);
+      gfx.beginPath();
+      gfx.moveTo(-18, 12);
+      gfx.lineTo(-8, 0);
+      gfx.lineTo(0, 12);
+      gfx.lineTo(8, 0);
+      gfx.lineTo(18, 12);
+      gfx.strokePath();
       break;
     default:
       // Generic circle

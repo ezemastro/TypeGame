@@ -51,9 +51,9 @@ describe('PowerUp config', () => {
     expect(f.timeScale).toBe(0.2);
   });
 
-  it('should preserve existing powerUps options array with 6 original entries', () => {
+  it('should preserve existing powerUps options array with 7 original entries (now includes RICOCHET)', () => {
     const opts = GameConfig.powerUps.options;
-    expect(opts).toHaveLength(6);
+    expect(opts).toHaveLength(7);
     expect(opts).toContain('EXPLOSIVE_IMPACT');
     expect(opts).toContain('PIERCING_SHOT');
   });

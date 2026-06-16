@@ -17,8 +17,8 @@ describe('PowerUpChoice type', () => {
 });
 
 describe('ALL_POWERUPS', () => {
-  it('should contain exactly 12 power-up definitions (6 original + 6 new)', () => {
-    expect(ALL_POWERUPS).toHaveLength(12);
+  it('should contain exactly 13 power-up definitions (6 original + 7 new including RICOCHET)', () => {
+    expect(ALL_POWERUPS).toHaveLength(13);
   });
 
   it('should include EXPLOSIVE_IMPACT', () => {
@@ -68,6 +68,7 @@ describe('ALL_POWERUPS', () => {
     { id: 'BURST_FIRE', name: 'Ráfaga', description: 'Dispara 2 proyectiles por letra' },
     { id: 'LIFE_STEAL', name: 'Robo de Vida', description: 'Eliminar enemigos reduce el calor' },
     { id: 'FREEZE', name: 'Congelación', description: 'Los enemigos cercanos se congelan' },
+    { id: 'RICOCHET', name: 'Rebote', description: 'La bala rebota hacia otro enemigo' },
   ];
 
   for (const expected of expectedNew) {

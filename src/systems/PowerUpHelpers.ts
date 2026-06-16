@@ -1,4 +1,5 @@
-import type { GameState, EnemyState } from '../entities/types';
+import type { GameState } from '../entities/types';
+import type { EnemyState } from '../entities/Enemy';
 
 /**
  * Pure helpers for powerup rendering and logic.
@@ -120,6 +121,7 @@ export function mapDevKeyToPowerUp(key: string): string | null {
     '0': 'BURST_FIRE',
     '-': 'LIFE_STEAL',
     '=': 'FREEZE',
+    '[': 'RICOCHET',
   };
   return map[key] ?? null;
 }
