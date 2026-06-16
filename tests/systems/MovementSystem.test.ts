@@ -137,6 +137,67 @@ describe('MovementSystem', () => {
     expect(() => movementSystem(state, 1000)).not.toThrow();
   });
 
+  describe('Magnetic Field', () => {
+    it('should pull enemy toward player when within 200px radius and MAGNETIC_FIELD active', () => {
+      const enemy = createEnemy('TEST', 1);
+      // Player center: (425, 525). Enemy center X = 425 (same column), Y = 425 (100px above player)
+      enemy.x = 425 - 30; // center X = 425
+      enemy.y = 425 - 30; // center Y = 425
+      enemy.speed = 80;
+      const state = makeState([enemy], { activePowerUps: ['MAGNETIC_FIELD'] });
+      // Without pull: enemy.y = 395 + 80 = 475 (normal speed toward player)
+      // With pull (30% extra): effective speed = 80 * 1.3 = 104
+      // After 1s: enemy.y = 395 + 104 = 499
+
+      movementSystem(state, 1000);
+
+      // Enemy pulled MORE than normal speed toward player
+      expect(state.enemies[0].x).toBeCloseTo(395, 0); // same X
+      expect(state.enemies[0].y).toBeCloseTo(499, 0); // faster than normal (475)
+    });
+
+    it('should NOT pull enemy outside 200px radius', () => {
+      const enemy = createEnemy('TEST', 1);
+      // Place enemy 250px above player
+      enemy.x = 425 - 30;
+      enemy.y = 275 - 30; // center Y = 275 (250px from player center at 525)
+      enemy.speed = 80;
+      const state = makeState([enemy], { activePowerUps: ['MAGNETIC_FIELD'] });
+      // Normal speed: enemy.y = 245 + 80 = 325
+
+      movementSystem(state, 1000);
+
+      expect(state.enemies[0].x).toBeCloseTo(395, 0);
+      expect(state.enemies[0].y).toBeCloseTo(325, 0); // normal speed, no extra pull
+    });
+
+    it('should NOT pull without MAGNETIC_FIELD active (even within radius)', () => {
+      const enemy = createEnemy('TEST', 1);
+      enemy.x = 425 - 30;
+      enemy.y = 425 - 30;
+      enemy.speed = 80;
+      const state = makeState([enemy], { activePowerUps: [] });
+
+      movementSystem(state, 1000);
+
+      expect(state.enemies[0].y).toBeCloseTo(475, 0); // normal speed
+    });
+
+    it('should NOT pull dead enemies within radius', () => {
+      const deadEnemy = createEnemy('DEAD', 1);
+      deadEnemy.x = 425 - 30;
+      deadEnemy.y = 425 - 30;
+      deadEnemy.speed = 80;
+      deadEnemy.alive = false;
+      const state = makeState([deadEnemy], { activePowerUps: ['MAGNETIC_FIELD'] });
+
+      movementSystem(state, 1000);
+
+      expect(state.enemies[0].y).toBe(395); // unmoved
+      expect(state.enemies[0].x).toBe(395);
+    });
+  });
+
   describe('Slowing Aura', () => {
     it('should slow enemy within radius when SLOW_AURA is active', () => {
       const enemy = createEnemy('TEST', 1);

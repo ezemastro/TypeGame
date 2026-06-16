@@ -8,6 +8,13 @@ export interface PowerUpChoice {
   description: string;
 }
 
+export interface PowerUpState {
+  cooldowns: Record<string, number>;
+  shieldCharges: number;
+  allyCount: number;
+  freezeActiveUntil: number;
+}
+
 export interface GameState {
   player: PlayerState;
   enemies: EnemyState[];
@@ -35,6 +42,7 @@ export interface GameState {
   levelUpChoices: PowerUpChoice[];
   secondaryTargetId: number | null;
   forgivenKeys: Array<{ key: string; expiresAt: number }>;
+  powerUpState: PowerUpState;
 }
 
 export function createInitialGameState(): GameState {
@@ -65,5 +73,11 @@ export function createInitialGameState(): GameState {
     levelUpChoices: [],
     secondaryTargetId: null,
     forgivenKeys: [],
+    powerUpState: {
+      cooldowns: {},
+      shieldCharges: 0,
+      allyCount: 0,
+      freezeActiveUntil: 0,
+    },
   };
 }

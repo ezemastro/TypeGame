@@ -32,6 +32,36 @@ export const ALL_POWERUPS: PowerUpChoice[] = [
     description: 'Dispara a los dos enemigos más cercanos con la misma letra',
   },
   {
+    id: 'SHIELD',
+    name: 'Escudo',
+    description: 'Absorbe 1 golpe. Recarga cada 30s',
+  },
+  {
+    id: 'ALLY',
+    name: 'Aliado',
+    description: 'Dron que dispara automáticamente',
+  },
+  {
+    id: 'MAGNETIC_FIELD',
+    name: 'Campo Magnético',
+    description: 'Atrae enemigos cercanos',
+  },
+  {
+    id: 'BURST_FIRE',
+    name: 'Ráfaga',
+    description: 'Dispara 2 proyectiles por letra',
+  },
+  {
+    id: 'LIFE_STEAL',
+    name: 'Robo de Vida',
+    description: 'Eliminar enemigos reduce el calor',
+  },
+  {
+    id: 'FREEZE',
+    name: 'Congelación',
+    description: 'Los enemigos cercanos se congelan',
+  },
+  {
     id: 'RICOCHET',
     name: 'Rebote',
     description: 'La bala rebota hacia otro enemigo',

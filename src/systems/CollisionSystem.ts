@@ -1,4 +1,5 @@
 import type { GameState } from '../entities/types';
+import { GameConfig } from '../config';
 
 export function collisionSystem(state: GameState): GameState {
   if (state.gameOver) return state;
@@ -23,6 +24,14 @@ export function collisionSystem(state: GameState): GameState {
       enemyTop < playerBottom &&
       enemyBottom > playerTop
     ) {
+      // Shield intercept: absorb collision if charges available
+      if (state.powerUpState.shieldCharges > 0) {
+        state.powerUpState.shieldCharges -= 1;
+        state.powerUpState.cooldowns.SHIELD = GameConfig.powerUps.shield.cooldownMs;
+        enemy.alive = false;
+        continue;
+      }
+
       state.gameOver = true;
       return state;
     }
