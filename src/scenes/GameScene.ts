@@ -559,19 +559,15 @@ export class GameScene extends Phaser.Scene {
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       const proj = this.projectiles[i];
 
-      // Handle bounce timer
+      // Handle bounce timer — counts down while flying to new target
       if (proj.bounceTimer > 0) {
         proj.bounceTimer -= delta;
         if (proj.bounceTimer <= 0) {
-          // Timer expired: find new target and resume flight (don't destroy)
-          const gs = this.gameState;
-          const nearest = findNearestEnemy(gs.enemies, proj.image.x, proj.image.y, proj.hitEnemyIds);
-          if (nearest) {
-            proj.targetId = nearest.id;
-          }
-          // Fall through to normal homing below
-        } else {
-          continue; // Pause flight during timer
+          // Failed to reach new target in time — destroy projectile
+          proj.image.destroy();
+          proj.glow.destroy();
+          this.projectiles.splice(i, 1);
+          continue;
         }
       }
 
@@ -661,7 +657,9 @@ export class GameScene extends Phaser.Scene {
           if (target.word.length > 0) {
             target.word = target.word.slice(1);
             if (target.word.length === 0) {
-              target.pendingDestruction = true;
+              target.alive = false;
+              this.gameState.gearDropped = true;
+              this.spawnStar(target.x, target.y);
             }
           }
         }
