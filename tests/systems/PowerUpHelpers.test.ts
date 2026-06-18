@@ -7,6 +7,12 @@ import {
   calculateCooldownProgress,
   calculateCardPositions,
   mapDevKeyToPowerUp,
+  getStackCount,
+  getAllyDroneColor,
+  applyAllyDamage,
+  getDualCannonOffsets,
+  getMagneticFieldRadius,
+  getPiercingCannonParts,
 } from '../../src/systems/PowerUpHelpers';
 import { createEnemy } from '../../src/entities/Enemy';
 import { createInitialGameState } from '../../src/entities/types';
@@ -182,23 +188,23 @@ describe('findNthClosestEnemy', () => {
 // 3.5 — Shield circle radii
 describe('getShieldCircleRadii', () => {
   it('returns empty array when charges is 0', () => {
-    const radii = getShieldCircleRadii(0, 28, 6);
+    const radii = getShieldCircleRadii(0, 36, 6);
     expect(radii).toEqual([]);
   });
 
   it('returns one radius for 1 charge', () => {
-    const radii = getShieldCircleRadii(1, 28, 6);
-    expect(radii).toEqual([28]);
+    const radii = getShieldCircleRadii(1, 36, 6);
+    expect(radii).toEqual([36]);
   });
 
   it('increments radius by step for each additional charge', () => {
-    const radii = getShieldCircleRadii(3, 28, 6);
-    expect(radii).toEqual([28, 34, 40]);
+    const radii = getShieldCircleRadii(3, 36, 6);
+    expect(radii).toEqual([36, 42, 48]);
   });
 
   it('handles large charge counts', () => {
-    const radii = getShieldCircleRadii(5, 28, 6);
-    expect(radii).toEqual([28, 34, 40, 46, 52]);
+    const radii = getShieldCircleRadii(5, 36, 6);
+    expect(radii).toEqual([36, 42, 48, 54, 60]);
   });
 });
 
@@ -312,6 +318,158 @@ describe('mapDevKeyToPowerUp', () => {
   });
 });
 
-// 3.1 — Scene orchestration already verified in PowerUpSystem.test.ts
-// The GameScene wiring task (3.1) is integration-only (adding a call to the
-// already-tested powerUpSystem). No additional unit test needed.
+// ── Stack count utility ──────────────────────────────────────────────
+
+describe('getStackCount', () => {
+  it('counts occurrences of an id in activePowerUps array', () => {
+    expect(getStackCount(['A', 'A', 'B'], 'A')).toBe(2);
+  });
+
+  it('returns 0 when id is not in the array', () => {
+    expect(getStackCount(['A', 'B', 'C'], 'D')).toBe(0);
+  });
+
+  it('handles empty array', () => {
+    expect(getStackCount([], 'ANY')).toBe(0);
+  });
+
+  it('counts correctly when multiple active powerups of same id interspersed', () => {
+    expect(getStackCount(['SHIELD', 'ALLY', 'SHIELD', 'BURST', 'SHIELD'], 'SHIELD')).toBe(3);
+  });
+
+  it('returns 0 for empty string id in empty array', () => {
+    expect(getStackCount([], '')).toBe(0);
+  });
+});
+
+// ── Ally drone color selection ───────────────────────────────────────
+
+describe('getAllyDroneColor', () => {
+  const palette = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#F472B6', '#A8E6CF'];
+
+  it('wraps around with modulo when index exceeds palette length', () => {
+    expect(getAllyDroneColor(5, palette)).toBe('#A8E6CF');
+  });
+
+  it('handles index 0 returning first color', () => {
+    expect(getAllyDroneColor(0, palette)).toBe('#FF6B6B');
+  });
+
+  it('returns correct color for mid-index', () => {
+    expect(getAllyDroneColor(3, palette)).toBe('#A78BFA');
+  });
+
+  it('wraps for larger indices (modulo behavior)', () => {
+    expect(getAllyDroneColor(6, palette)).toBe('#FF6B6B'); // 6 % 6 = 0
+    expect(getAllyDroneColor(7, palette)).toBe('#4ECDC4'); // 7 % 6 = 1
+  });
+});
+
+// ── Ally bullet letter peeling ──────────────────────────────────────
+
+describe('applyAllyDamage', () => {
+  it('peels one letter from the target word', () => {
+    const result = applyAllyDamage('HOLA');
+    expect(result.word).toBe('OLA');
+    expect(result.killed).toBe(false);
+  });
+
+  it('kills enemy when word becomes empty after peeling last letter', () => {
+    const result = applyAllyDamage('A');
+    expect(result.word).toBe('');
+    expect(result.killed).toBe(true);
+  });
+
+  it('returns empty word and no kill for empty word input (edge case)', () => {
+    const result = applyAllyDamage('');
+    expect(result.word).toBe('');
+    expect(result.killed).toBe(true); // already empty → treat as killed
+  });
+});
+
+// ── Refinement: Dual Weapon cannon offsets ─────────────────────────────
+
+describe('getDualCannonOffsets', () => {
+  it('returns empty array for 0 stacks', () => {
+    expect(getDualCannonOffsets(0, 50, 8)).toEqual([]);
+  });
+
+  it('returns 1 cannon for 1 stack (alternating sides, starts left)', () => {
+    const result = getDualCannonOffsets(1, 50, 8);
+    expect(result).toHaveLength(1);
+    // First cannon is left side (negative x), inside ship (±25 half-width)
+    expect(result[0].x).toBeLessThan(0);
+    expect(Math.abs(result[0].x)).toBeLessThan(25);
+  });
+
+  it('returns 2 cannons for 2 stacks (one each side)', () => {
+    const result = getDualCannonOffsets(2, 50, 8);
+    expect(result).toHaveLength(2);
+    // Should have one left, one right
+    const signs = result.map(r => Math.sign(r.x));
+    expect(signs).toContain(-1);
+    expect(signs).toContain(1);
+  });
+
+  it('returns 4 cannons all inside ship width for 4 stacks', () => {
+    const result = getDualCannonOffsets(4, 50, 8);
+    expect(result).toHaveLength(4);
+    for (const pos of result) {
+      expect(Math.abs(pos.x)).toBeLessThanOrEqual(25);
+    }
+  });
+
+  it('cannons beyond 4 stacks may protrude outside ship', () => {
+    const result = getDualCannonOffsets(6, 50, 10);
+    expect(result).toHaveLength(6);
+    // At least some cannons should be at or beyond ship edge
+    const hasOutside = result.some(r => Math.abs(r.x) >= 25);
+    expect(hasOutside).toBe(true);
+  });
+});
+
+// ── Refinement: Magnetic Field radius scaling ──────────────────────────
+
+describe('getMagneticFieldRadius', () => {
+  it('returns base radius when stacks is 0', () => {
+    expect(getMagneticFieldRadius(200, 0, 30)).toBe(200);
+  });
+
+  it('scales radius by perStack * stacks', () => {
+    expect(getMagneticFieldRadius(200, 1, 30)).toBe(230);
+    expect(getMagneticFieldRadius(200, 2, 30)).toBe(260);
+    expect(getMagneticFieldRadius(200, 3, 30)).toBe(290);
+  });
+
+  it('works with different base and perStack values', () => {
+    expect(getMagneticFieldRadius(150, 1, 25)).toBe(175);
+    expect(getMagneticFieldRadius(150, 2, 25)).toBe(200);
+  });
+});
+
+// ── Refinement: Piercing cannon two-part dimensions ────────────────────
+
+describe('getPiercingCannonParts', () => {
+  const cfg = { baseHeight: 14, heightPerStack: 6, baseWidth: 3, tipHeight: 6 };
+
+  it('returns base body height and tip offset for 0 stacks', () => {
+    const parts = getPiercingCannonParts(0, cfg);
+    expect(parts.bodyHeight).toBe(14);
+    expect(parts.tipOffsetY).toBe(-14); // tip is at top of barrel
+    expect(parts.bodyWidth).toBe(3);
+  });
+
+  it('grows body height per stack (Y-axis only)', () => {
+    const parts2 = getPiercingCannonParts(2, cfg);
+    expect(parts2.bodyHeight).toBe(26); // 14 + 2*6
+    expect(parts2.tipOffsetY).toBe(-26);
+    expect(parts2.bodyWidth).toBe(3); // X-axis unchanged
+  });
+
+  it('tip offset always matches body height distance upward', () => {
+    const parts = getPiercingCannonParts(5, cfg);
+    expect(parts.bodyHeight).toBe(44); // 14 + 5*6
+    expect(parts.tipOffsetY).toBe(-44);
+    expect(parts.bodyWidth).toBe(3);
+  });
+});

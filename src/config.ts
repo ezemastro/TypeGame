@@ -125,7 +125,7 @@ export const GameConfig = Object.freeze({
     },
     shield: {
       cooldownMs: 30000,
-      circleRadius: 28,
+      circleRadius: 36,
       radiusStep: 6,
       color: '#00BCD4',
       alpha: 0.3,
@@ -133,7 +133,7 @@ export const GameConfig = Object.freeze({
     ally: {
       fireRateMs: 1500,
       horizontalOffset: 25,
-      colorPalette: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#F472B6'],
+      colorPalette: ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#F472B6', '#A8E6CF'],
     },
     magneticField: {
       radius: 200,
@@ -152,6 +152,23 @@ export const GameConfig = Object.freeze({
       durationMs: 3000,
       cooldownMs: 18000,
       timeScale: 0.2,
+    },
+    piercingCannon: {
+      baseWidth: 3,
+      baseHeight: 14,
+      widthPerStack: 1,
+      heightPerStack: 6,
+      color: '#00E5FF',
+      alpha: 0.6,
+      tipHeight: 6,
+      tipWidth: 8,
+    },
+    dualCannon: {
+      width: 3,
+      height: 10,
+      perStackSpacing: 10,
+      color: '#00E5FF',
+      alpha: 0.8,
     },
   },
 });

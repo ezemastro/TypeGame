@@ -11,7 +11,11 @@ export function movementSystem(state: GameState, delta: number): GameState {
   const auraRadius = GameConfig.powerUps.slowingAura.radius;
   const auraSpeedMultiplier = GameConfig.powerUps.slowingAura.speedMultiplier;
   const magneticFieldActive = state.activePowerUps.includes('MAGNETIC_FIELD');
-  const magneticRadius = GameConfig.powerUps.magneticField.radius;
+  const magneticBaseRadius = GameConfig.powerUps.magneticField.radius;
+  const magneticStacks = magneticFieldActive
+    ? state.activePowerUps.filter((id) => id === 'MAGNETIC_FIELD').length
+    : 0;
+  const magneticRadius = magneticBaseRadius + magneticStacks * 30;
   const magneticStrength = GameConfig.powerUps.magneticField.pullStrength;
 
   for (const enemy of state.enemies) {

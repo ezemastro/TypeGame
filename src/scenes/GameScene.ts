@@ -18,6 +18,11 @@ import {
   findNthClosestEnemy,
   getShieldCircleRadii,
   mapDevKeyToPowerUp,
+  getAllyDroneColor,
+  applyAllyDamage,
+  getDualCannonOffsets,
+  getPiercingCannonParts,
+  getDevKeyGuide,
 } from '../systems/PowerUpHelpers';
 import { findNearestEnemy } from '../systems/ProjectileHelpers';
 import { createHUD, type HUD } from '../ui/HUD';
@@ -46,6 +51,10 @@ interface ProjectileRender {
   lastDirX: number;
   lastDirY: number;
   pierceHitsLeft: number;
+  canKill: boolean;
+  hitEnemyIds: Set<number>;
+  isAlly?: boolean;
+  tintColor?: number;
 }
 
 type ParallaxType = 'nebula' | 'ground';
@@ -59,10 +68,12 @@ interface ParallaxItem {
 export class GameScene extends Phaser.Scene {
   private gameState!: GameState;
   private playerImage!: Phaser.GameObjects.Image;
-  private shipPiercing!: Phaser.GameObjects.Image;
+  private piercingBarrelBody!: Phaser.GameObjects.Rectangle;
+  private piercingBarrelGlow!: Phaser.GameObjects.Rectangle;
+  private piercingBarrelTip!: Phaser.GameObjects.Triangle;
   private shipRicochet!: Phaser.GameObjects.Image;
   private shipExplosive!: Phaser.GameObjects.Image;
-  private shipDual!: Phaser.GameObjects.Image;
+  private dualCannons: Phaser.GameObjects.Rectangle[] = [];
   private shipCooling!: Phaser.GameObjects.Image;
   private shipSight!: Phaser.GameObjects.Image;
   private enemyRenderMap: Map<number, EnemyRender> = new Map();
@@ -79,8 +90,15 @@ export class GameScene extends Phaser.Scene {
   private allyDrones: Phaser.GameObjects.Container[] = [];
   private allyTimers: Phaser.Time.TimerEvent[] = [];
   private magneticFieldRing: Phaser.GameObjects.Arc | null = null;
+  private magneticParticles: Phaser.GameObjects.Arc[] = [];
+  private devKeyGuide: Phaser.GameObjects.Text | null = null;
   private freezeOverlay: Phaser.GameObjects.Rectangle | null = null;
   private freezeVfxTriggered: boolean = false;
+  // Procedural overlay indicators (stack visuals)
+  private burstLines: Phaser.GameObjects.Rectangle[] | null = null;
+  private lifeStealCircle: Phaser.GameObjects.Arc | null = null;
+  private lifeStealOuter: Phaser.GameObjects.Arc | null = null;
+  private freezeDots: Phaser.GameObjects.Arc[] = [];
 
   constructor() {
     super({ key: 'GameScene' });
@@ -104,8 +122,12 @@ export class GameScene extends Phaser.Scene {
     this.allyDrones = [];
     this.allyTimers = [];
     this.magneticFieldRing = null;
+    this.magneticParticles = [];
     this.freezeOverlay = null;
     this.freezeVfxTriggered = false;
+    this.burstLines = null;
+    this.lifeStealCircle = null;
+    this.freezeDots = [];
     this.gameOverScreen = null;
     this.levelUpScreen = null;
     this.auraCircle = null;
@@ -131,8 +153,41 @@ export class GameScene extends Phaser.Scene {
     this.playerImage.setDepth(10);
 
     // Ship power-up overlays (hidden until power-up active, follow player position)
-    this.shipPiercing = this.add.image(p.x, p.y, 'ship-piercing');
-    this.shipPiercing.setScale(playerScale * 1.3).setDepth(11).setVisible(false);
+    const pierceCfg = GameConfig.powerUps.piercingCannon;
+    const pierceColor = parseInt(pierceCfg.color.slice(1), 16);
+
+    // Piercing barrel glow (behind body — depth 8, below ship)
+    this.piercingBarrelGlow = this.add.rectangle(
+      p.x, p.y,
+      pierceCfg.baseWidth + 4,
+      pierceCfg.baseHeight + 4,
+      pierceColor,
+      0.12,
+    );
+    this.piercingBarrelGlow.setOrigin(0.5, 1.0).setDepth(8).setVisible(false);
+
+    // Piercing barrel body (behind ship — depth 9)
+    this.piercingBarrelBody = this.add.rectangle(
+      p.x, p.y,
+      pierceCfg.baseWidth,
+      pierceCfg.baseHeight,
+      pierceColor,
+      pierceCfg.alpha,
+    );
+    this.piercingBarrelBody.setOrigin(0.5, 1.0).setDepth(9).setStrokeStyle(1, pierceColor, 0.3).setVisible(false);
+
+    // Piercing tip (in front of ship — depth 12, triangular point)
+    this.piercingBarrelTip = this.add.triangle(
+      p.x, p.y,
+      0, -pierceCfg.tipHeight / 2,
+      -pierceCfg.tipWidth / 2, pierceCfg.tipHeight / 2,
+      pierceCfg.tipWidth / 2, pierceCfg.tipHeight / 2,
+      pierceColor,
+      1.0,
+    );
+    this.piercingBarrelTip.setOrigin(0.5, 1.0).setDepth(12).setVisible(false);
+    // Tip outline for polish
+    this.piercingBarrelTip.setStrokeStyle(1, 0xffffff, 0.5);
 
     this.shipRicochet = this.add.image(p.x, p.y, 'ship-ricochet');
     this.shipRicochet.setScale(playerScale * 0.8).setDepth(11).setVisible(false);
@@ -140,8 +195,9 @@ export class GameScene extends Phaser.Scene {
     this.shipExplosive = this.add.image(p.x, p.y, 'ship-explosive');
     this.shipExplosive.setScale(playerScale).setDepth(11).setVisible(false);
 
-    this.shipDual = this.add.image(p.x, p.y, 'ship-dual');
-    this.shipDual.setScale(playerScale).setDepth(11).setVisible(false);
+    // Dual cannons: procedural side-cannons replace the old shipDual image.
+    // Created dynamically per stack in syncShipRendering. Start with empty array.
+    this.dualCannons = [];
 
     this.shipCooling = this.add.image(p.x, p.y, 'ship-cooling');
     this.shipCooling.setScale(playerScale).setDepth(9).setVisible(false);
@@ -158,6 +214,39 @@ export class GameScene extends Phaser.Scene {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
+
+    // Dev mode: powerup key reference guide (top-right corner of canvas)
+    // Uses Vite's import.meta.env.DEV. For non-Vite builds, replace with a manual flag
+    // or process.env check (e.g. process.env.NODE_ENV === 'development').
+    if (import.meta.env.DEV) {
+      const guide = getDevKeyGuide();
+      const lines = ['[DEV] PowerUp Keys:', ...guide.map(g => `${g.key}: ${g.name}`)];
+      const textX = GameConfig.canvas.width - 180; // inside canvas (800px wide)
+      const textY = 4;
+
+      // Semi-transparent dark background for readability against game content
+      this.add.rectangle(
+        textX + 65,   // center x (~half of approx text width + padding)
+        textY + 80,   // center y (~half of approx text height + padding)
+        140,           // width with padding
+        170,           // height with padding
+        0x000000,
+        0.45,
+      ).setDepth(99);
+
+      this.devKeyGuide = this.add.text(
+        textX,
+        textY,
+        lines.join('\n'),
+        {
+          fontFamily: 'monospace',
+          fontSize: '9px',
+          color: '#CCCCCC',
+          lineSpacing: 2,
+        },
+      );
+      this.devKeyGuide.setDepth(100);
+    }
 
     // HUD
     this.hud = createHUD(this);
@@ -431,15 +520,17 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** Create a single projectile at origin targeting enemyId. */
-  private createProjectileAt(originX: number, originY: number, targetId: number, canKill: boolean, _angle?: number): void {
+  private createProjectileAt(originX: number, originY: number, targetId: number, canKill: boolean, _angle?: number, tintColor?: number): void {
     const texW = GameConfig.shooting.projectileWidth;
     const texH = GameConfig.shooting.projectileHeight;
 
     // Fallback: if laser texture fails, create a cyan energy bolt
     if (!this.textures.exists('laser')) {
-      const glow = this.add.circle(originX, originY, texW * 1.2, 0x00E5FF, 0.3);
+      const glowTint = tintColor ?? 0x00E5FF;
+      const glow = this.add.circle(originX, originY, texW * 1.2, glowTint, 0.3);
       glow.setDepth(14);
-      const rect = this.add.circle(originX, originY, texW * 0.6, 0xffffff);
+      const coreTint = tintColor ?? 0xffffff;
+      const rect = this.add.circle(originX, originY, texW * 0.6, coreTint);
       rect.setDisplaySize(texW, texH);
       rect.setDepth(15);
       this.projectiles.push({
@@ -459,6 +550,8 @@ export class GameScene extends Phaser.Scene {
         pierceHitsLeft: 0,
         canKill,
         hitEnemyIds: new Set(),
+        isAlly: tintColor !== undefined,
+        tintColor,
       });
       return;
     }
@@ -467,12 +560,15 @@ export class GameScene extends Phaser.Scene {
     const glow = this.add.image(originX, originY, 'laser');
     glow.setDisplaySize(texW * 1.6, texH * 1.3);
     glow.setAlpha(0.25);
-    glow.setTint(0x00E5FF);
+    glow.setTint(tintColor ?? 0x00E5FF);
     glow.setDepth(14);
 
     const img = this.add.image(originX, originY, 'laser');
     img.setDisplaySize(texW, texH);
     img.setScale(0.8);
+    if (tintColor !== undefined) {
+      img.setTint(tintColor);
+    }
     img.setDepth(15);
     this.projectiles.push({
       image: img,
@@ -491,6 +587,8 @@ export class GameScene extends Phaser.Scene {
         pierceHitsLeft: 0,
       canKill,
       hitEnemyIds: new Set(),
+      isAlly: tintColor !== undefined,
+      tintColor,
     });
   }
 
@@ -676,6 +774,22 @@ export class GameScene extends Phaser.Scene {
               this.spawnStar(target.x, target.y);
             }
           }
+        }
+
+        // Ally bullet: peel 1 letter on first hit (does not bounce/pierce)
+        if (proj.isAlly && !proj.hasHitPrimary && !target.pendingDestruction) {
+          const result = applyAllyDamage(target.word);
+          target.word = result.word;
+          if (result.killed) {
+            target.alive = false;
+            this.gameState.gearDropped = true;
+            this.spawnStar(target.x, target.y);
+          }
+          proj.hasHitPrimary = true;
+          proj.image.destroy();
+          proj.glow.destroy();
+          this.projectiles.splice(i, 1);
+          continue;
         }
 
         const gs = this.gameState;
@@ -924,10 +1038,8 @@ export class GameScene extends Phaser.Scene {
 
     // Player position
     this.playerImage.setPosition(gs.player.x, gs.player.y);
-    this.shipPiercing.setPosition(gs.player.x, gs.player.y);
     this.shipRicochet.setPosition(gs.player.x, gs.player.y);
     this.shipExplosive.setPosition(gs.player.x, gs.player.y);
-    this.shipDual.setPosition(gs.player.x, gs.player.y);
     this.shipCooling.setPosition(gs.player.x, gs.player.y);
     this.shipSight.setPosition(gs.player.x, gs.player.y);
   }
@@ -937,13 +1049,15 @@ export class GameScene extends Phaser.Scene {
     const auraActive = gs.activePowerUps.includes('SLOW_AURA');
 
     if (auraActive) {
+      const cfg = GameConfig.powerUps.slowingAura;
+      const stacks = gs.activePowerUps.filter(id => id === 'SLOW_AURA').length;
+      const radius = cfg.radius + stacks * 25;
       if (!this.auraCircle) {
-        const cfg = GameConfig.powerUps.slowingAura;
         const color = parseInt(cfg.color.slice(1), 16);
         this.auraCircle = this.add.circle(
           gs.player.x,
           gs.player.y,
-          cfg.radius,
+          radius,
           color,
           cfg.alpha,
         );
@@ -953,6 +1067,7 @@ export class GameScene extends Phaser.Scene {
           gs.player.x,
           gs.player.y,
         );
+        this.auraCircle.setRadius(radius);
       }
     } else if (this.auraCircle) {
       this.auraCircle.destroy();
@@ -963,23 +1078,196 @@ export class GameScene extends Phaser.Scene {
   private syncShipRendering(): void {
     const gs = this.gameState;
     const playerScale = gs.player.width / this.playerImage.width;
+    const pScale = playerScale;
 
+    // ── PIERCING_SHOT: two-part (body behind ship, tip in front) ──────
     const pierceCount = gs.activePowerUps.filter(id => id === 'PIERCING_SHOT').length;
-    this.shipPiercing.setVisible(pierceCount > 0);
+    const pierceCfg = GameConfig.powerUps.piercingCannon;
+    const visible = pierceCount > 0;
+
+    this.piercingBarrelGlow.setVisible(visible);
+    this.piercingBarrelBody.setVisible(visible);
+    this.piercingBarrelTip.setVisible(visible);
+
     if (pierceCount > 0) {
-      this.shipPiercing.setScale(playerScale * (1.3 + pierceCount * 0.2));
+      const parts = getPiercingCannonParts(pierceCount, pierceCfg);
+      const px = gs.player.x;
+      const py = gs.player.y;
+
+      // Glow: slightly larger translucent rect behind body (depth 8)
+      this.piercingBarrelGlow.setPosition(px, py);
+      this.piercingBarrelGlow.setSize(parts.bodyWidth + 4, parts.bodyHeight + 4);
+
+      // Body: rectangle, Y-axis growth only, origin bottom-center (depth 9, behind ship)
+      this.piercingBarrelBody.setPosition(px, py);
+      this.piercingBarrelBody.setSize(parts.bodyWidth, parts.bodyHeight);
+
+      // Tip: triangle at top of barrel (depth 12, in front of ship)
+      this.piercingBarrelTip.setPosition(px, py + parts.tipOffsetY);
+      // Keep tip size constant, just move it up
+      this.piercingBarrelTip.setScale(1);
     }
 
+    // ── RICOCHET: existing scale + new alpha stacking ───────────────
     const ricochetCount = gs.activePowerUps.filter(id => id === 'RICOCHET').length;
     this.shipRicochet.setVisible(ricochetCount > 0);
     if (ricochetCount > 0) {
-      this.shipRicochet.setScale(playerScale * (0.8 + ricochetCount * 0.15));
+      this.shipRicochet.setScale(pScale * (0.8 + ricochetCount * 0.15));
+      this.shipRicochet.setAlpha(Math.min(1, 0.7 + ricochetCount * 0.1));
     }
 
-    this.shipExplosive.setVisible(gs.activePowerUps.includes('EXPLOSIVE_IMPACT'));
-    this.shipDual.setVisible(gs.activePowerUps.includes('DUAL_SHOT'));
-    this.shipCooling.setVisible(gs.activePowerUps.includes('QUICK_COOLING'));
-    this.shipSight.setVisible(gs.activePowerUps.includes('SHARP_SIGHT'));
+    // ── EXPLOSIVE_IMPACT: scale per stack ───────────────────────────
+    const explosiveCount = gs.activePowerUps.filter(id => id === 'EXPLOSIVE_IMPACT').length;
+    this.shipExplosive.setVisible(explosiveCount > 0);
+    if (explosiveCount > 0) {
+      this.shipExplosive.setScale(pScale * (1 + explosiveCount * 0.15));
+    }
+
+    // ── DUAL_SHOT: procedural side-cannons (ADD, not GROW) ────────────
+    const dualCount = gs.activePowerUps.filter(id => id === 'DUAL_SHOT').length;
+    const dualCfg = GameConfig.powerUps.dualCannon;
+    const offsets = getDualCannonOffsets(dualCount, gs.player.width, dualCfg.perStackSpacing);
+    const dualColor = parseInt(dualCfg.color.slice(1), 16);
+
+    // Remove excess cannons
+    while (this.dualCannons.length > offsets.length) {
+      const cannon = this.dualCannons.pop()!;
+      cannon.destroy();
+    }
+
+    // Add or update cannons
+    for (let i = 0; i < offsets.length; i++) {
+      const cx = gs.player.x + offsets[i].x;
+      const cy = gs.player.y + offsets[i].y;
+      if (i < this.dualCannons.length) {
+        this.dualCannons[i].setPosition(cx, cy);
+        this.dualCannons[i].setVisible(true);
+      } else {
+        // Small vertical barrel on ship side
+        const cannon = this.add.rectangle(cx, cy, dualCfg.width, dualCfg.height, dualColor, dualCfg.alpha);
+        cannon.setDepth(11);
+        // Polished look: subtle border
+        cannon.setStrokeStyle(1, 0xffffff, 0.25);
+        this.dualCannons.push(cannon);
+      }
+    }
+    // Hide excess if all removed
+    for (let i = offsets.length; i < this.dualCannons.length; i++) {
+      this.dualCannons[i].setVisible(false);
+    }
+
+    // ── QUICK_COOLING: alpha per stack ──────────────────────────────
+    const coolingCount = gs.activePowerUps.filter(id => id === 'QUICK_COOLING').length;
+    this.shipCooling.setVisible(coolingCount > 0);
+    if (coolingCount > 0) {
+      this.shipCooling.setAlpha(Math.min(1, 0.3 + coolingCount * 0.2));
+    }
+
+    // ── SHARP_SIGHT: scale per stack ────────────────────────────────
+    const sightCount = gs.activePowerUps.filter(id => id === 'SHARP_SIGHT').length;
+    this.shipSight.setVisible(sightCount > 0);
+    if (sightCount > 0) {
+      this.shipSight.setScale(pScale * (1 + sightCount * 0.08));
+    }
+
+    // ── BURST_FIRE: 2 cyan lines at gun tips with subtle glow ─────────
+    const burstCount = gs.activePowerUps.filter(id => id === 'BURST_FIRE').length;
+    if (burstCount > 0) {
+      if (!this.burstLines) {
+        const px = gs.player.x;
+        const py = gs.player.y;
+        const lineW = 2 + burstCount;
+        const lineLen = 8;
+        const burstColor = 0x00E5FF;
+        // Left gun tip glow (behind)
+        const leftGlow = this.add.rectangle(px - 6, py - gs.player.height / 2 - lineLen / 2, lineW + 2, lineLen + 2, burstColor, 0.15);
+        leftGlow.setDepth(11);
+        // Left gun tip
+        const leftLine = this.add.rectangle(px - 6, py - gs.player.height / 2 - lineLen / 2, lineW, lineLen, burstColor, 0.8);
+        leftLine.setDepth(12);
+        leftLine.setStrokeStyle(1, 0xffffff, 0.3);
+        // Right gun tip glow (behind)
+        const rightGlow = this.add.rectangle(px + 6, py - gs.player.height / 2 - lineLen / 2, lineW + 2, lineLen + 2, burstColor, 0.15);
+        rightGlow.setDepth(11);
+        // Right gun tip
+        const rightLine = this.add.rectangle(px + 6, py - gs.player.height / 2 - lineLen / 2, lineW, lineLen, burstColor, 0.8);
+        rightLine.setDepth(12);
+        rightLine.setStrokeStyle(1, 0xffffff, 0.3);
+        // Store all 4 (glows + lines)
+        this.burstLines = [leftGlow, leftLine, rightGlow, rightLine];
+      } else {
+        const lineW = 2 + burstCount;
+        for (const line of this.burstLines) line.setVisible(true);
+        this.burstLines[0].setSize(lineW + 2, 10);    // left glow
+        this.burstLines[1].setSize(lineW, 8);          // left line
+        this.burstLines[2].setSize(lineW + 2, 10);    // right glow
+        this.burstLines[3].setSize(lineW, 8);          // right line
+        this.burstLines[0].setPosition(gs.player.x - 6, gs.player.y - gs.player.height / 2 - 4);
+        this.burstLines[1].setPosition(gs.player.x - 6, gs.player.y - gs.player.height / 2 - 4);
+        this.burstLines[2].setPosition(gs.player.x + 6, gs.player.y - gs.player.height / 2 - 4);
+        this.burstLines[3].setPosition(gs.player.x + 6, gs.player.y - gs.player.height / 2 - 4);
+      }
+    } else if (this.burstLines) {
+      for (const line of this.burstLines) line.setVisible(false);
+    }
+
+    // ── LIFE_STEAL: two-layer glow circle behind ship ────────────────
+    const lifeStealCount = gs.activePowerUps.filter(id => id === 'LIFE_STEAL').length;
+    if (lifeStealCount > 0) {
+      const radius = 26 + lifeStealCount * 3;
+      const alpha = Math.min(0.3, 0.05 + lifeStealCount * 0.04);
+      if (!this.lifeStealCircle) {
+        // Outer glow (larger, more transparent)
+        this.lifeStealOuter = this.add.circle(gs.player.x, gs.player.y, radius + 4, 0xFF3366, alpha * 0.5);
+        this.lifeStealOuter.setDepth(8);
+        // Inner glow (smaller, brighter)
+        this.lifeStealCircle = this.add.circle(gs.player.x, gs.player.y, radius, 0xFF3366, alpha);
+        this.lifeStealCircle.setDepth(8);
+      } else {
+        this.lifeStealCircle.setVisible(true);
+        this.lifeStealCircle.setRadius(radius);
+        this.lifeStealCircle.setAlpha(alpha);
+        this.lifeStealCircle.setPosition(gs.player.x, gs.player.y);
+        if (this.lifeStealOuter) {
+          this.lifeStealOuter.setVisible(true);
+          this.lifeStealOuter.setRadius(radius + 4);
+          this.lifeStealOuter.setAlpha(alpha * 0.5);
+          this.lifeStealOuter.setPosition(gs.player.x, gs.player.y);
+        }
+      }
+    } else if (this.lifeStealCircle) {
+      this.lifeStealCircle.setVisible(false);
+      if (this.lifeStealOuter) this.lifeStealOuter.setVisible(false);
+    }
+
+    // ── FREEZE: N blue dots orbiting the ship ────────────────────────
+    const freezeCount = gs.activePowerUps.filter(id => id === 'FREEZE').length;
+    // Sync dot count
+    while (this.freezeDots.length > freezeCount) {
+      const dot = this.freezeDots.pop()!;
+      dot.destroy();
+    }
+    if (freezeCount > 0) {
+      const orbitRadius = 35;
+      const now = this.time.now;
+      for (let d = 0; d < freezeCount; d++) {
+        const angle = (d / freezeCount) * Math.PI * 2 + now * 0.002; // orbit over time
+        const dx = Math.cos(angle) * orbitRadius;
+        const dy = Math.sin(angle) * orbitRadius;
+        if (d < this.freezeDots.length) {
+          this.freezeDots[d].setPosition(gs.player.x + dx, gs.player.y + dy);
+          this.freezeDots[d].setVisible(true);
+        } else {
+          const dot = this.add.circle(gs.player.x + dx, gs.player.y + dy, 3, 0x80DEEA, 0.6);
+          dot.setDepth(12);
+          this.freezeDots.push(dot);
+        }
+      }
+    } else {
+      for (const dot of this.freezeDots) {
+        dot.setVisible(false);
+      }
+    }
   }
 
   private spawnExplosion(x: number, y: number): void {
@@ -1162,9 +1450,9 @@ export class GameScene extends Phaser.Scene {
       const step = Math.floor(i / 2) + 1;
       const droneX = px + side * step * allyCfg.horizontalOffset;
       const droneY = py;
-      // Random color per drone, seeded by index
-      const hue = (i * 137 + 42) % 360;
-      const color = Phaser.Display.Color.HSLToColor(hue / 360, 0.8, 0.55).color;
+      // Color from config palette (6 distinguishable colors per design)
+      const hexColor = getAllyDroneColor(i, allyCfg.colorPalette);
+      const droneColor = Phaser.Display.Color.HexStringToColor(hexColor).color;
 
       if (i < this.allyDrones.length) {
         this.allyDrones[i].setPosition(droneX, droneY);
@@ -1173,17 +1461,17 @@ export class GameScene extends Phaser.Scene {
         container.setDepth(13);
 
         // Drone body: main circle
-        const body = this.add.circle(0, 0, 8, color);
+        const body = this.add.circle(0, 0, 8, droneColor);
         container.add(body);
         // Cockpit: smaller centered circle, slightly lighter
-        const lighter = Phaser.Display.Color.ValueToColor(color).lighten(30).color;
+        const lighter = Phaser.Display.Color.ValueToColor(droneColor).lighten(30).color;
         const cockpit = this.add.circle(0, 0, 4, lighter);
         container.add(cockpit);
         // Left wing
-        const wingL = this.add.rectangle(-10, 0, 6, 3, color);
+        const wingL = this.add.rectangle(-10, 0, 6, 3, droneColor);
         container.add(wingL);
         // Right wing
-        const wingR = this.add.rectangle(10, 0, 6, 3, color);
+        const wingR = this.add.rectangle(10, 0, 6, 3, droneColor);
         container.add(wingR);
         // Weapon barrel: small rect pointing forward (up)
         const weapon = this.add.rectangle(0, -10, 2, 5, lighter);
@@ -1199,7 +1487,7 @@ export class GameScene extends Phaser.Scene {
             if (gs.gameOver || gs.isPaused) return;
             const target = findNthClosestEnemy(gs, px, py, 2);
             if (target) {
-              this.createProjectileAt(container.x, container.y, target.id, target.pendingDestruction ?? false);
+              this.createProjectileAt(container.x, container.y, target.id, target.pendingDestruction ?? false, undefined, droneColor);
             }
           },
         });
@@ -1218,18 +1506,54 @@ export class GameScene extends Phaser.Scene {
     if (active) {
       const px = gs.player.x;
       const py = gs.player.y;
+      const stacks = gs.activePowerUps.filter(id => id === 'MAGNETIC_FIELD').length;
+      const radius = cfg.radius + stacks * 30;
       const color = parseInt(cfg.ringColor.slice(1), 16);
 
+      // Main ring
       if (!this.magneticFieldRing) {
-        this.magneticFieldRing = this.add.circle(px, py, cfg.radius, color, 0);
+        this.magneticFieldRing = this.add.circle(px, py, radius, color, 0);
         this.magneticFieldRing.setStrokeStyle(1, color, cfg.ringAlpha);
         this.magneticFieldRing.setDepth(3);
       } else {
         this.magneticFieldRing.setPosition(px, py);
+        this.magneticFieldRing.setRadius(radius);
       }
-    } else if (this.magneticFieldRing) {
-      this.magneticFieldRing.destroy();
-      this.magneticFieldRing = null;
+
+      // Magnetic particles: small dots inside the ring that accelerate toward the ship
+      const particleCount = Math.min(12, 4 + stacks * 2);
+      const now = this.time.now;
+
+      // Remove excess particles
+      while (this.magneticParticles.length > particleCount) {
+        const p = this.magneticParticles.pop()!;
+        p.destroy();
+      }
+
+      // Add or update particles at random positions inside the ring
+      for (let i = 0; i < particleCount; i++) {
+        // Deterministic pseudo-random position based on index + time
+        const seed = i * 137.508 + now * 0.003;
+        const angle = (seed % (Math.PI * 2));
+        const distFactor = 0.3 + (Math.sin(seed * 0.7) + 1) / 2 * 0.7; // 0.3..1.0 of radius
+        const pdx = Math.cos(angle) * radius * distFactor;
+        const pdy = Math.sin(angle) * radius * distFactor;
+
+        if (i < this.magneticParticles.length) {
+          this.magneticParticles[i].setPosition(px + pdx, py + pdy);
+          this.magneticParticles[i].setVisible(true);
+        } else {
+          const dot = this.add.circle(px + pdx, py + pdy, 1.5, 0x00BCD4, 0.5);
+          dot.setDepth(3);
+          this.magneticParticles.push(dot);
+        }
+      }
+    } else {
+      if (this.magneticFieldRing) {
+        this.magneticFieldRing.destroy();
+        this.magneticFieldRing = null;
+      }
+      for (const p of this.magneticParticles) p.setVisible(false);
     }
   }
 
@@ -1244,10 +1568,13 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.playerImage.destroy();
-    this.shipPiercing.destroy();
+    this.piercingBarrelGlow.destroy();
+    this.piercingBarrelBody.destroy();
+    this.piercingBarrelTip.destroy();
     this.shipRicochet.destroy();
     this.shipExplosive.destroy();
-    this.shipDual.destroy();
+    for (const c of this.dualCannons) c.destroy();
+    this.dualCannons = [];
     this.shipCooling.destroy();
     this.shipSight.destroy();
     for (const [, render] of this.enemyRenderMap) {
@@ -1276,10 +1603,30 @@ export class GameScene extends Phaser.Scene {
       this.magneticFieldRing.destroy();
       this.magneticFieldRing = null;
     }
+    for (const p of this.magneticParticles) p.destroy();
+    this.magneticParticles = [];
+    if (this.devKeyGuide) {
+      this.devKeyGuide.destroy();
+      this.devKeyGuide = null;
+    }
     if (this.freezeOverlay) {
       this.freezeOverlay.destroy();
       this.freezeOverlay = null;
     }
+    if (this.burstLines) {
+      for (const line of this.burstLines) line.destroy();
+      this.burstLines = null;
+    }
+    if (this.lifeStealCircle) {
+      this.lifeStealCircle.destroy();
+      this.lifeStealCircle = null;
+    }
+    if (this.lifeStealOuter) {
+      this.lifeStealOuter.destroy();
+      this.lifeStealOuter = null;
+    }
+    for (const dot of this.freezeDots) dot.destroy();
+    this.freezeDots = [];
     this.tileSprite.destroy();
     this.children.removeAll(true);
 

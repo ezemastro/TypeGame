@@ -105,6 +105,28 @@ describe('GameConfig', () => {
     expect(GameConfig.powerUps.options).toHaveLength(7);
   });
 
+  it('should have shield config with circleRadius 36 (encloses 50x50 ship)', () => {
+    expect(GameConfig.powerUps.shield).toBeDefined();
+    expect(GameConfig.powerUps.shield.circleRadius).toBe(36);
+    expect(GameConfig.powerUps.shield.radiusStep).toBe(6);
+  });
+
+  it('should have ally colorPalette with 6 distinguishable colors', () => {
+    expect(GameConfig.powerUps.ally).toBeDefined();
+    expect(GameConfig.powerUps.ally.colorPalette).toHaveLength(6);
+    expect(GameConfig.powerUps.ally.colorPalette).toContain('#A8E6CF');
+  });
+
+  it('should have piercingCannon config for procedural rendering', () => {
+    expect(GameConfig.powerUps.piercingCannon).toBeDefined();
+    expect(GameConfig.powerUps.piercingCannon.baseWidth).toBe(3);
+    expect(GameConfig.powerUps.piercingCannon.baseHeight).toBe(14);
+    expect(GameConfig.powerUps.piercingCannon.widthPerStack).toBe(1);
+    expect(GameConfig.powerUps.piercingCannon.heightPerStack).toBe(6);
+    expect(GameConfig.powerUps.piercingCannon.color).toBe('#00E5FF');
+    expect(GameConfig.powerUps.piercingCannon.alpha).toBe(0.6);
+  });
+
   it('should be frozen (readonly) at runtime', () => {
     expect(Object.isFrozen(GameConfig)).toBe(true);
   });

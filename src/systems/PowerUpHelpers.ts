@@ -104,6 +104,31 @@ export function calculateCardPositions(
   );
 }
 
+// ── Stack count utility ─────────────────────────────────────────────
+
+/** Count occurrences of `id` in `activePowerUps`. Used by all stack- scaling formulas. */
+export function getStackCount(activePowerUps: string[], id: string): number {
+  return activePowerUps.filter((p) => p === id).length;
+}
+
+// ── Ally drone color selection ──────────────────────────────────────
+
+/** Return the hex color for ally drone at `index` from the palette (wraps with modulo). */
+export function getAllyDroneColor(index: number, palette: string[]): string {
+  return palette[index % palette.length];
+}
+
+// ── Ally bullet damage ──────────────────────────────────────────────
+
+/**
+ * Peel one letter from a word on ally bullet hit.
+ * Returns the new word and whether this kills the target.
+ */
+export function applyAllyDamage(word: string): { word: string; killed: boolean } {
+  const next = word.slice(1);
+  return { word: next, killed: next.length === 0 };
+}
+
 // ── Dev Mode key mapping ────────────────────────────────────────────
 
 /** Map keyboard key to powerup ID for dev mode activation. Returns null if not a dev key. */
@@ -124,4 +149,123 @@ export function mapDevKeyToPowerUp(key: string): string | null {
     '[': 'RICOCHET',
   };
   return map[key] ?? null;
+}
+
+/** Return the dev key → powerup name mapping for the debug guide overlay. */
+export function getDevKeyGuide(): { key: string; id: string; name: string }[] {
+  const keyMap: Record<string, string> = {
+    '1': 'EXPLOSIVE_IMPACT',
+    '2': 'QUICK_COOLING',
+    '3': 'SHARP_SIGHT',
+    '4': 'SLOW_AURA',
+    '5': 'PIERCING_SHOT',
+    '6': 'DUAL_SHOT',
+    '7': 'SHIELD',
+    '8': 'ALLY',
+    '9': 'MAGNETIC_FIELD',
+    '0': 'BURST_FIRE',
+    '-': 'LIFE_STEAL',
+    '=': 'FREEZE',
+    '[': 'RICOCHET',
+  };
+  const nameMap: Record<string, string> = {
+    EXPLOSIVE_IMPACT: 'Impacto Explosivo',
+    QUICK_COOLING: 'Enfriamiento Rápido',
+    SHARP_SIGHT: 'Vista Aguda',
+    SLOW_AURA: 'Aura Ralentizadora',
+    PIERCING_SHOT: 'Bala Perforante',
+    DUAL_SHOT: 'Doble Arma',
+    SHIELD: 'Escudo',
+    ALLY: 'Aliado',
+    MAGNETIC_FIELD: 'Campo Magnético',
+    BURST_FIRE: 'Ráfaga',
+    LIFE_STEAL: 'Robo de Vida',
+    FREEZE: 'Congelación',
+    RICOCHET: 'Rebote',
+  };
+  return Object.entries(keyMap).map(([key, id]) => ({
+    key,
+    id,
+    name: nameMap[id] ?? id,
+  }));
+}
+
+// ── Dual Weapon cannon offsets ────────────────────────────────────────
+
+/** Offset relative to ship center for a dual-shot cannon. */
+export interface CannonOffset {
+  x: number;
+  y: number;
+}
+
+/**
+ * Compute side-cannon positions for DUAL_SHOT stacking.
+ * Each stack adds one cannon, alternating left/right.
+ * First 4 stacks: cannons stay inside shipWidth bounds.
+ * Stacks beyond 4 may protrude outside.
+ *
+ * @param stacks    Number of active DUAL_SHOT stacks
+ * @param shipWidth Width of the ship in pixels (for inside-bound check)
+ * @param perStep   Horizontal spacing between successive cannons on the same side
+ */
+export function getDualCannonOffsets(
+  stacks: number,
+  shipWidth: number,
+  perStep: number,
+): CannonOffset[] {
+  const offsets: CannonOffset[] = [];
+  const halfShip = shipWidth / 2;
+
+  for (let i = 0; i < stacks; i++) {
+    const side = i % 2 === 0 ? -1 : 1; // alternate left/right
+    const step = Math.floor(i / 2) + 1;
+    const x = side * step * perStep;
+    // First 4 stacks: clamp to inside ship
+    const clampedX =
+      i < 4 ? Math.max(-halfShip + 4, Math.min(halfShip - 4, x)) : x;
+    offsets.push({ x: clampedX, y: 0 });
+  }
+
+  return offsets;
+}
+
+// ── Magnetic Field radius scaling ─────────────────────────────────────
+
+/** Compute effective magnetic field radius from stack count. */
+export function getMagneticFieldRadius(
+  baseRadius: number,
+  stacks: number,
+  perStack: number,
+): number {
+  return baseRadius + stacks * perStack;
+}
+
+// ── Piercing cannon two-part dimensions ───────────────────────────────
+
+export interface PiercingCannonParts {
+  bodyHeight: number;
+  bodyWidth: number;
+  tipOffsetY: number;
+  tipHeight: number;
+}
+
+export interface PiercingCannonConfig {
+  baseHeight: number;
+  heightPerStack: number;
+  baseWidth: number;
+  tipHeight: number;
+}
+
+/** Compute two-part piercing cannon dimensions from stack count. */
+export function getPiercingCannonParts(
+  stacks: number,
+  cfg: PiercingCannonConfig,
+): PiercingCannonParts {
+  const bodyHeight = cfg.baseHeight + stacks * cfg.heightPerStack;
+  return {
+    bodyHeight,
+    bodyWidth: cfg.baseWidth,
+    tipOffsetY: -bodyHeight, // tip sits at top of barrel (negative Y = up)
+    tipHeight: cfg.tipHeight,
+  };
 }

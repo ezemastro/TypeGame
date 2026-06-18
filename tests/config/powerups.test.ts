@@ -6,7 +6,7 @@ describe('PowerUp config', () => {
     const s = GameConfig.powerUps.shield;
     expect(s).toBeDefined();
     expect(s.cooldownMs).toBe(30000);
-    expect(s.circleRadius).toBe(28);
+    expect(s.circleRadius).toBe(36);
     expect(s.radiusStep).toBe(6);
     expect(s.color).toBe('#00BCD4');
     expect(s.alpha).toBe(0.3);
@@ -18,7 +18,7 @@ describe('PowerUp config', () => {
     expect(a.fireRateMs).toBe(1500);
     expect(a.horizontalOffset).toBe(25);
     expect(Array.isArray(a.colorPalette)).toBe(true);
-    expect(a.colorPalette.length).toBeGreaterThan(0);
+    expect(a.colorPalette.length).toBe(6);
   });
 
   it('should have magneticField config with radius and pull strength', () => {

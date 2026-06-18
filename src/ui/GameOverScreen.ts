@@ -57,7 +57,6 @@ export function showGameOver(
   restartText.setDepth(depth + 1);
 
   // Decorative corner accents
-  const accentSize = 8;
   const margin = 12;
   const corners = [
     [cx - 220 + margin, cy - 140 + margin],
